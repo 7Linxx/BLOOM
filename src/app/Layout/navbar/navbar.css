@@ -1,0 +1,40 @@
+.navbar {
+  height: 60px;
+  background-color: var(--c-petal);
+  align-items: center;
+  padding: 0 20px;
+  display: flex;
+}
+
+.navbar-logo {
+  height: 42px;
+  width: 42px;
+  background-color: var(--c-crimson-dark);
+  border-radius: var(--r-full);
+}
+
+.menu {
+  height: 40px;
+  width: 100%;
+  max-width: 600px;
+  border: 2px solid var(--c-crimson-dark);
+  border-radius: 22px;
+  margin: 0 15px;
+  padding: 0 25px;
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.menu-item {
+  color: var(--c-rose);
+  font-size: 18px;
+}
+
+.menu-item.active {
+  color: var(--c-crimson);
+}
+
+.menu-item:hover  {
+  text-decoration: underline;
+}

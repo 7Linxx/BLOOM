@@ -1,0 +1,2 @@
+# BLOOM
+Bloom es un calendario digital menstrual que permite a cada usuaria registrar y consultar su ciclo, periodo, síntomas, estado de ánimo y notas diarias en un solo lugar. A partir de su historial, estima el próximo periodo y genera estadísticas personalizadas, además de ofrecer artículos confiables sobre salud menstrual y bienestar. Incluye la opción de compartir información con una pareja, siempre bajo los permisos que la usuaria decida.
