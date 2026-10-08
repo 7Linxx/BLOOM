@@ -1,28 +1,41 @@
 <div class="contenedor">
 
-  <div class="encabezado">
+  <!-- ENCABEZADO -->
+  <section class="encabezado">
 
-    <h1 class="app-title">BLOOM</h1>
-
-    <div class="logo">
-      App Logo
+    <div class="titulo">
+      <span class="decoracion">✦</span>
+      <h1 class="app-title">Bloom</h1>
     </div>
 
-  </div>
+    <div class="logo">
+      <span>App Logo</span>
+
+      <div class="logo-decoration uno"></div>
+      <div class="logo-decoration dos"></div>
+      <div class="logo-decoration tres"></div>
+    </div>
+
+  </section>
 
 
-  <div class="contenido">
+  <!-- VISTA PRINCIPAL -->
+  <section class="contenido">
 
-
+    <!-- MINI CALENDARIO -->
     <div class="mini-calendar">
 
       <div class="calendar-header">
-        <span>‹</span>
+
+        <button class="calendar-arrow">‹</button>
+
         <h2>Calendar</h2>
-        <span>›</span>
+
+        <button class="calendar-arrow">›</button>
+
       </div>
 
-      <div class="calendar-grid">
+      <div class="calendar-days">
         <span>L</span>
         <span>M</span>
         <span>X</span>
@@ -30,62 +43,269 @@
         <span>V</span>
         <span>S</span>
         <span>D</span>
+      </div>
 
+      <div class="calendar-grid">
+
+        <span></span>
+        <span></span>
         <span>1</span>
         <span>2</span>
         <span>3</span>
         <span>4</span>
         <span>5</span>
+
         <span>6</span>
         <span>7</span>
-
         <span>8</span>
         <span>9</span>
         <span>10</span>
         <span>11</span>
         <span>12</span>
+
         <span>13</span>
         <span>14</span>
-
         <span>15</span>
-        <span>16</span>
+        <span class="dia-activo">16</span>
         <span>17</span>
         <span>18</span>
         <span>19</span>
+
         <span>20</span>
         <span>21</span>
-
         <span>22</span>
         <span>23</span>
         <span>24</span>
         <span>25</span>
         <span>26</span>
+
         <span>27</span>
         <span>28</span>
-
         <span>29</span>
         <span>30</span>
+        <span>31</span>
+        <span></span>
+        <span></span>
+
       </div>
 
     </div>
 
 
-
+    <!-- INFORMACIÓN -->
     <div class="informacion">
 
       <div class="texto">
-        <p>HOla</p>
-        <p>que mas</p>
-        <p>aqui la info</p>
+
+        <div class="linea larga"></div>
+        <div class="linea"></div>
+        <div class="linea corta"></div>
+
+        <p>
+          Organiza tus actividades,
+          cuida de ti y disfruta cada día.
+        </p>
+
       </div>
 
       <div class="botones">
-        <button>Calendar</button>
-        <button>Care</button>
+
+        <a href="#calendar-preview" class="boton">
+          Calendar
+        </a>
+
+        <a href="#care-preview" class="boton">
+          Care
+        </a>
+
       </div>
 
     </div>
 
-  </div>
+  </section>
+
+
+  <!-- VISTAZOS DE LAS OTRAS PÁGINAS -->
+  <section class="vistas">
+
+    <h2 class="titulo-seccion">
+      Your little world
+    </h2>
+
+
+    <div class="vistas-grid">
+
+      <!-- CALENDAR -->
+      <article class="vista-card" id="calendar-preview">
+
+        <div class="vista-titulo">
+          <h3>Calendar</h3>
+          <span>✦</span>
+        </div>
+
+        <div class="vista-calendar">
+
+          <div class="vista-calendar-header">
+            <span>September</span>
+          </div>
+
+          <div class="vista-calendar-grid">
+
+            <span>L</span>
+            <span>M</span>
+            <span>X</span>
+            <span>J</span>
+            <span>V</span>
+            <span>S</span>
+            <span>D</span>
+
+            <span>1</span>
+            <span>2</span>
+            <span>3</span>
+            <span>4</span>
+            <span>5</span>
+            <span>6</span>
+            <span>7</span>
+
+            <span>8</span>
+            <span>9</span>
+            <span class="mini-dia">10</span>
+            <span>11</span>
+            <span>12</span>
+            <span>13</span>
+            <span>14</span>
+
+            <span>15</span>
+            <span>16</span>
+            <span>17</span>
+            <span>18</span>
+            <span>19</span>
+            <span>20</span>
+            <span>21</span>
+
+          </div>
+
+        </div>
+
+        <p class="vista-descripcion">
+          Organiza tus días y recuerda tus actividades.
+        </p>
+
+      </article>
+
+
+      <!-- CARE -->
+      <article class="vista-card" id="care-preview">
+
+        <div class="vista-titulo">
+          <h3>Care</h3>
+          <span>♡</span>
+        </div>
+
+        <div class="care-preview">
+
+          <div class="care-item">
+            <span class="care-icon">♡</span>
+
+            <div>
+              <strong>Water</strong>
+              <small>Stay hydrated</small>
+            </div>
+          </div>
+
+          <div class="care-item">
+            <span class="care-icon">☀</span>
+
+            <div>
+              <strong>Sleep</strong>
+              <small>Rest your body</small>
+            </div>
+          </div>
+
+          <div class="care-item">
+            <span class="care-icon">✿</span>
+
+            <div>
+              <strong>Self care</strong>
+              <small>Take a moment</small>
+            </div>
+          </div>
+
+        </div>
+
+        <p class="vista-descripcion">
+          Pequeños recordatorios para cuidar de ti.
+        </p>
+
+      </article>
+
+
+      <!-- NOTAS -->
+      <article class="vista-card">
+
+        <div class="vista-titulo">
+          <h3>Notes</h3>
+          <span>✎</span>
+        </div>
+
+        <div class="notas-preview">
+
+          <div class="nota">
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+
+          <div class="nota">
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+
+        </div>
+
+        <p class="vista-descripcion">
+          Guarda tus ideas, pensamientos y pendientes.
+        </p>
+
+      </article>
+
+
+      <!-- HABITS -->
+      <article class="vista-card">
+
+        <div class="vista-titulo">
+          <h3>Habits</h3>
+          <span>♡</span>
+        </div>
+
+        <div class="habitos-preview">
+
+          <div class="habito">
+            <span>Drink water</span>
+            <div class="check"></div>
+          </div>
+
+          <div class="habito">
+            <span>Read</span>
+            <div class="check"></div>
+          </div>
+
+          <div class="habito">
+            <span>Exercise</span>
+            <div class="check"></div>
+          </div>
+
+        </div>
+
+        <p class="vista-descripcion">
+          Lleva un pequeño seguimiento de tus hábitos.
+        </p>
+
+      </article>
+
+    </div>
+
+  </section>
 
 </div>

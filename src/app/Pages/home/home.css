@@ -1,55 +1,123 @@
 .contenedor {
   width: 90%;
   max-width: 1200px;
-  margin: 30px auto;
+  margin: 30px auto 60px;
 }
+
 
 .encabezado {
   display: flex;
   align-items: center;
   justify-content: space-between;
 
+  min-height: 300px;
   padding: 20px 40px;
 
-  min-height: 250px;
+  border-bottom: 4px solid var(--c-pink);
+}
+
+.titulo {
+  position: relative;
 }
 
 .app-title {
-  margin: 0;
+  margin-top: 20px;
+
+  font-family: var(--font-display);
+  font-size: 300px;
+  font-weight: 700;
+  line-height: 0.8;
+
   color: var(--c-crimson);
-  font-size: 146px;
-  font-weight: bold;
 }
 
+.decoracion {
+  position: absolute;
+
+  top: -30px;
+  left: -30px;
+
+  color: var(--c-pink);
+  font-size: 40px;
+}
+
+
+/* LOGO */
+
 .logo {
+  position: relative;
+
   width: 260px;
   height: 220px;
-
-  border: 5px solid var(--c-pink);
-  background-color: var(--c-butter);
 
   display: flex;
   align-items: center;
   justify-content: center;
 
+  border: 5px solid var(--c-pink);
+  background-color: var(--c-cream);
+
   color: var(--c-crimson);
   font-size: 28px;
 }
 
-.contenido {
-  display: flex;
-  gap: 40px;
+.logo-decoration {
+  position: absolute;
 
+  width: 18px;
+  height: 18px;
+
+  border-radius: 50%;
+
+  background-color: var(--c-butter);
 }
 
+.logo-decoration.uno {
+  top: 20px;
+  left: 25px;
+}
+
+.logo-decoration.dos {
+  right: 25px;
+  bottom: 30px;
+  width: 28px;
+  height: 28px;
+}
+
+.logo-decoration.tres {
+  right: 40px;
+  top: 55px;
+  width: 8px;
+  height: 8px;
+}
+
+
+/* =========================
+   CONTENIDO PRINCIPAL
+========================= */
+
+.contenido {
+  display: flex;
+  align-items: stretch;
+
+  gap: 40px;
+
+  margin-top: 35px;
+}
+
+
+/* =========================
+   CALENDARIO
+========================= */
+
 .mini-calendar {
-  width: 55%;
-  min-height: 280px;
+  width: 58%;
+  min-height: 300px;
 
   padding: 20px;
 
   border: 4px solid var(--c-pink);
-  background-color: var(--c-butter);
+  background-color: var(--c-cream);
 }
 
 .calendar-header {
@@ -57,25 +125,45 @@
   align-items: center;
   justify-content: space-between;
 
-  border-bottom: 3px solid var(--c-crimson);
   padding-bottom: 10px;
+
+  border-bottom: 3px solid var(--c-rose);
 }
 
 .calendar-header h2 {
   margin: 0;
+
+  font-family: var(--font-display);
+  font-size: 38px;
+
   color: var(--c-crimson);
 }
 
-.calendar-header span {
+.calendar-arrow {
   color: var(--c-crimson);
-  font-size: 25px;
+  font-size: 30px;
 }
 
+.calendar-days,
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+}
 
-  margin-top: 15px;
+.calendar-days {
+  margin-top: 12px;
+
+  color: var(--c-crimson);
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.calendar-days span {
+  text-align: center;
+}
+
+.calendar-grid {
+  margin-top: 5px;
 }
 
 .calendar-grid span {
@@ -85,48 +173,394 @@
   align-items: center;
   justify-content: center;
 
-  border-right: 1px solid var(--c-crimson);
-  border-bottom: 1px solid var(--c-crimson);
+  border-right: 1px solid var(--c-pink);
+  border-bottom: 1px solid var(--c-pink);
+
+  color: var(--c-text-soft);
+  font-size: 13px;
+}
+
+.calendar-grid .dia-activo {
+  margin: 4px;
+
+  min-height: 27px;
+
+  border-radius: 50%;
+
+  background-color: var(--c-pink);
 
   color: var(--c-crimson);
 }
+
+
+/* =========================
+   INFORMACIÓN
+========================= */
 
 .informacion {
   flex: 1;
-  margin-top: 20px;
+
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+
+  padding: 20px 10px;
 }
 
 .texto {
-  padding: 10px 20px;
+  padding: 10px;
 }
 
 .texto p {
-  color: var(--c-crimson);
-  font-size: 18px;
+  max-width: 330px;
+
+  margin-top: 20px;
+
+  color: var(--c-text-soft);
+  font-size: 15px;
+  line-height: 1.6;
 }
+
+.linea {
+  width: 80%;
+  height: 4px;
+
+  margin-bottom: 12px;
+
+  border-radius: var(--r-full);
+
+  background-color: var(--c-rose);
+}
+
+.linea.larga {
+  width: 95%;
+}
+
+.linea.corta {
+  width: 55%;
+}
+
+
+/* =========================
+   BOTONES
+========================= */
 
 .botones {
   display: flex;
   flex-direction: column;
+
   gap: 10px;
 
   width: 170px;
 }
 
-.botones button {
+.boton {
   padding: 8px 20px;
 
-  border: 3px solid var(--c-crimson);
-  border-radius: 20px;
-
-  background-color: transparent;
+  border: 3px solid var(--c-rose);
+  border-radius: var(--r-full);
 
   color: var(--c-crimson);
-  font-size: 18px;
-  font-weight: bold;
 
-  cursor: pointer;
+  text-align: center;
+  font-size: 17px;
+
+  transition:
+    background var(--t-fast),
+    transform var(--t-fast);
+}
+
+.boton:hover {
+  background-color: var(--c-blush);
+  transform: translateX(5px);
+}
+
+
+/* =========================
+   VISTAS
+========================= */
+
+.vistas {
+  margin-top: 70px;
+}
+
+.titulo-seccion {
+  margin-bottom: 30px;
+
+  font-family: var(--font-display);
+  font-size: 55px;
+  font-weight: 700;
+
+  color: var(--c-crimson);
+
+  text-align: center;
+}
+
+.vistas-grid {
+  display: grid;
+
+  grid-template-columns: repeat(2, 1fr);
+
+  gap: 30px;
+}
+
+
+/* =========================
+   TARJETAS
+========================= */
+
+.vista-card {
+  min-height: 330px;
+
+  padding: 25px;
+
+  border: 3px solid var(--c-pink);
+  border-radius: var(--r-lg);
+
+  background-color: var(--c-cream);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.vista-titulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 20px;
+
+  color: var(--c-crimson);
+}
+
+.vista-titulo h3 {
+  font-family: var(--font-display);
+  font-size: 38px;
+}
+
+.vista-titulo span {
+  font-size: 25px;
+}
+
+
+/* =========================
+   MINI CALENDARIO
+========================= */
+
+.vista-calendar {
+  padding: 12px;
+
+  border: 2px solid var(--c-pink);
+}
+
+.vista-calendar-header {
+  margin-bottom: 10px;
+
+  color: var(--c-crimson);
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.vista-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.vista-calendar-grid span {
+  padding: 7px 2px;
+
+  border-right: 1px solid var(--c-blush);
+  border-bottom: 1px solid var(--c-blush);
+
+  color: var(--c-text-soft);
+
+  text-align: center;
+  font-size: 11px;
+}
+
+.vista-calendar-grid .mini-dia {
+  background-color: var(--c-butter);
+
+  border-radius: 50%;
+
+  color: var(--c-crimson);
+}
+
+
+/* =========================
+   CARE
+========================= */
+
+.care-preview {
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+}
+
+.care-item {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 10px;
+
+  border: 2px solid var(--c-blush);
+  border-radius: var(--r-md);
+
+  background-color: var(--c-white);
+}
+
+.care-icon {
+  width: 35px;
+  height: 35px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background-color: var(--c-butter);
+
+  color: var(--c-crimson);
+}
+
+.care-item strong,
+.care-item small {
+  display: block;
+}
+
+.care-item strong {
+  color: var(--c-crimson);
+  font-size: 14px;
+}
+
+.care-item small {
+  margin-top: 3px;
+
+  color: var(--c-text-soft);
+  font-size: 11px;
+}
+
+
+/* =========================
+   NOTAS
+========================= */
+
+.notas-preview {
+  display: flex;
+  gap: 15px;
+}
+
+.nota {
+  flex: 1;
+
+  min-height: 150px;
+
+  padding: 20px;
+
+  border: 2px solid var(--c-pink);
+
+  background-color: var(--c-butter);
+
+  transform: rotate(-2deg);
+}
+
+.nota:nth-child(2) {
+  transform: rotate(2deg);
+  background-color: var(--c-blush);
+}
+
+.nota div {
+  height: 3px;
+
+  margin-bottom: 15px;
+
+  border-radius: var(--r-full);
+
+  background-color: var(--c-rose);
+}
+
+.nota div:nth-child(2) {
+  width: 80%;
+}
+
+.nota div:nth-child(3) {
+  width: 60%;
+}
+
+
+/* =========================
+   HÁBITOS
+========================= */
+
+.habitos-preview {
+  display: flex;
+  flex-direction: column;
+
+  gap: 12px;
+}
+
+.habito {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 12px;
+
+  border-bottom: 2px dashed var(--c-pink);
+
+  color: var(--c-text-soft);
+}
+
+.check {
+  width: 20px;
+  height: 20px;
+
+  border: 2px solid var(--c-rose);
+  border-radius: 50%;
+}
+
+.vista-descripcion {
+  margin-top: 18px;
+
+  color: var(--c-text-soft);
+  font-size: 13px;
+}
+
+
+@media (max-width: 768px) {
+
+  .contenedor {
+    width: 92%;
+  }
+
+  .encabezado {
+    flex-direction: column;
+    gap: 40px;
+
+    padding: 30px 10px;
+  }
+
+  .app-title {
+    font-size: 6rem;
+  }
+
+  .contenido {
+    flex-direction: column;
+  }
+
+  .mini-calendar {
+    width: 100%;
+  }
+
+  .informacion {
+    gap: 25px;
+  }
+
+  .vistas-grid {
+    grid-template-columns: 1fr;
+  }
+
 }
