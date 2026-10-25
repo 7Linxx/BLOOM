@@ -1,0 +1,60 @@
+<main class="auth">
+
+  <a routerLink="/home" class="brand">
+    <img src="assets/logo_bloom.png" alt="Bloom, ir al inicio">
+   
+  </a>
+
+  <section class="auth-card registro-card" aria-labelledby="registro-title">
+    <h1 id="registro-title" class="auth-title">Registrarse</h1>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <div class="registro-grid">
+
+        <div class="registro-col">
+          @for (f of leftFields; track f.name) {
+            <ng-container [ngTemplateOutlet]="fieldTpl" [ngTemplateOutletContext]="{ $implicit: f }" />
+          }
+        </div>
+
+        <div class="registro-col">
+          @for (f of rightFields; track f.name) {
+            <ng-container [ngTemplateOutlet]="fieldTpl" [ngTemplateOutletContext]="{ $implicit: f }" />
+          }
+
+          <button type="submit" class="btn-submit" [disabled]="sending()">
+            {{ sending() ? 'Creando…' : 'Crear Cuenta' }}
+          </button>
+        </div>
+
+      </div>
+
+      @if (serverError(); as msg) {
+        <p class="server-error" role="alert">{{ msg }}</p>
+      }
+
+      <!-- Un campo del formulario (se reutiliza en las dos columnas) -->
+      <ng-template #fieldTpl let-f>
+        <div class="field">
+          <label [for]="f.name">{{ f.label }}</label>
+          <input [id]="f.name" [type]="f.type" [formControlName]="f.name"
+                 [attr.autocomplete]="f.autocomplete"
+                 [attr.max]="f.type === 'date' ? today : null"
+                 [attr.aria-invalid]="error(f.name) ? 'true' : null"
+                 [attr.aria-describedby]="describedBy(f)">
+          @if (f.hint) {
+            <p [id]="f.name + '-hint'" class="hint">{{ f.hint }}</p>
+          }
+          @if (error(f.name); as msg) {
+            <p [id]="f.name + '-error'" class="error" role="alert">{{ msg }}</p>
+          }
+        </div>
+      </ng-template>
+    </form>
+
+    <p class="auth-switch">
+      ¿Ya tienes cuenta? <a routerLink="/login">Ingresa</a>
+    </p>
+  </section>
+
+</main>

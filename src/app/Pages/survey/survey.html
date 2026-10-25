@@ -1,0 +1,163 @@
+<main class="auth">
+
+  <a routerLink="/home" class="brand">
+    <img src="assets/logo_bloom.png" alt="Bloom, ir al inicio">
+  </a>
+
+  <section class="auth-card survey-card" aria-labelledby="survey-title">
+    <h1 id="survey-title" class="auth-title">Cuéntanos de ti</h1>
+    <p class="lead">Con estos datos calculamos tu ciclo. Podrás cambiarlos cuando quieras.</p>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <div class="survey-grid">
+
+        <!-- Columna izquierda: datos básicos -->
+        <div class="survey-col">
+
+          <div class="field">
+            <label for="altura">Altura (cm) <span class="optional">opcional</span></label>
+            <input id="altura" type="number" inputmode="numeric" formControlName="altura"
+                   min="100" max="230" step="1"
+                   [attr.aria-invalid]="alturaError ? 'true' : null"
+                   [attr.aria-describedby]="alturaError ? 'altura-error' : null">
+            @if (alturaError; as msg) {
+              <p id="altura-error" class="error" role="alert">{{ msg }}</p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="peso">Peso (kg) <span class="optional">opcional</span></label>
+            <input id="peso" type="number" inputmode="decimal" formControlName="peso"
+                   min="30" max="250" step="0.1"
+                   [attr.aria-invalid]="pesoError ? 'true' : null"
+                   [attr.aria-describedby]="pesoError ? 'peso-error' : null">
+            @if (pesoError; as msg) {
+              <p id="peso-error" class="error" role="alert">{{ msg }}</p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="sueno">Horas de sueño por noche <span class="optional">opcional</span></label>
+            <input id="sueno" type="number" inputmode="decimal" formControlName="sueno"
+                   min="1" max="16" step="0.5"
+                   [attr.aria-invalid]="suenoError ? 'true' : null"
+                   [attr.aria-describedby]="suenoError ? 'sueno-error' : null">
+            @if (suenoError; as msg) {
+              <p id="sueno-error" class="error" role="alert">{{ msg }}</p>
+            }
+          </div>
+
+        </div>
+
+        <!-- Columna derecha: tu ciclo -->
+        <div class="survey-col">
+
+          <fieldset class="choices">
+            <legend>¿Cómo quieres indicar tu ciclo?</legend>
+
+            <label class="choice">
+              <input type="radio" formControlName="modo" value="duraciones">
+              <span>Sé cuánto duran mi ciclo y mi periodo</span>
+            </label>
+            <label class="choice">
+              <input type="radio" formControlName="modo" value="fechas">
+              <span>Prefiero poner las fechas de mis últimos ciclos</span>
+            </label>
+            <label class="choice">
+              <input type="radio" formControlName="modo" value="ninguno">
+              <span>Todavía no lo sé</span>
+            </label>
+          </fieldset>
+
+          @switch (mode) {
+
+            @case ('duraciones') {
+              <div class="field">
+                <label for="duracionCiclo">Duración de tu ciclo (días)</label>
+                <input id="duracionCiclo" type="number" inputmode="numeric" formControlName="duracionCiclo"
+                       min="15" max="60" step="1"
+                       [attr.aria-invalid]="cicloError ? 'true' : null"
+                       [attr.aria-describedby]="'duracionCiclo-hint' + (cicloError ? ' duracionCiclo-error' : '')">
+                <p id="duracionCiclo-hint" class="hint">Desde el primer día de un periodo hasta el día antes del siguiente.</p>
+                @if (cicloError; as msg) {
+                  <p id="duracionCiclo-error" class="error" role="alert">{{ msg }}</p>
+                }
+              </div>
+
+              <div class="field">
+                <label for="duracionPeriodo">Duración de tu periodo (días)</label>
+                <input id="duracionPeriodo" type="number" inputmode="numeric" formControlName="duracionPeriodo"
+                       min="1" max="14" step="1"
+                       [attr.aria-invalid]="periodoError ? 'true' : null"
+                       [attr.aria-describedby]="periodoError ? 'duracionPeriodo-error' : null">
+                @if (periodoError; as msg) {
+                  <p id="duracionPeriodo-error" class="error" role="alert">{{ msg }}</p>
+                }
+              </div>
+            }
+
+            @case ('fechas') {
+              <div formArrayName="ciclos" class="cycles">
+                @for (c of ciclos.controls; track $index; let i = $index) {
+                  <div class="cycle" [formGroupName]="i">
+
+                    <div class="cycle-head">
+                      <span class="cycle-title">{{ cycleName(i) }}</span>
+                      @if (ciclos.length > 1) {
+                        <button type="button" class="link-btn" (click)="removeCycle(i)">Quitar</button>
+                      }
+                    </div>
+
+                    <div class="cycle-dates">
+                      <div class="field">
+                        <label [for]="'inicio-' + i">Primer día del periodo</label>
+                        <input [id]="'inicio-' + i" type="date" formControlName="inicio" [attr.max]="today"
+                               [attr.aria-invalid]="cycleError(i, 'inicio') ? 'true' : null"
+                               [attr.aria-describedby]="cycleError(i, 'inicio') ? 'inicio-' + i + '-error' : null">
+                        @if (cycleError(i, 'inicio'); as msg) {
+                          <p [id]="'inicio-' + i + '-error'" class="error" role="alert">{{ msg }}</p>
+                        }
+                      </div>
+
+                      <div class="field">
+                        <label [for]="'fin-' + i">Último día <span class="optional">si lo recuerdas</span></label>
+                        <input [id]="'fin-' + i" type="date" formControlName="fin" [attr.max]="today"
+                               [attr.aria-invalid]="cycleError(i, 'fin') ? 'true' : null"
+                               [attr.aria-describedby]="cycleError(i, 'fin') ? 'fin-' + i + '-error' : null">
+                        @if (cycleError(i, 'fin'); as msg) {
+                          <p [id]="'fin-' + i + '-error'" class="error" role="alert">{{ msg }}</p>
+                        }
+                      </div>
+                    </div>
+
+                  </div>
+                }
+
+                @if (ciclos.length < maxCycles) {
+                  <button type="button" class="btn-add" (click)="addCycle()">+ Agregar otro ciclo</button>
+                }
+              </div>
+            }
+
+            @case ('ninguno') {
+              <p class="note">
+                Está bien. Empezaremos a calcular tu ciclo cuando registres tu primer periodo.
+              </p>
+            }
+
+          }
+
+        </div>
+      </div>
+
+      @if (serverError(); as msg) {
+        <p class="server-error" role="alert">{{ msg }}</p>
+      }
+
+      <button type="submit" class="btn-submit" [disabled]="sending()">
+        {{ sending() ? 'Guardando…' : 'Empezar' }}
+      </button>
+    </form>
+  </section>
+
+</main>

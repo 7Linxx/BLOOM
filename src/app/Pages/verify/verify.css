@@ -1,0 +1,30 @@
+.verify-card {
+  max-width: calc(514 * var(--u));
+  padding: calc(30 * var(--u)) calc(62 * var(--u)) calc(30 * var(--u));
+}
+
+.verify-card .auth-title { font-size: calc(64 * var(--u)); }
+
+.lead {
+  font-family: var(--font-body);
+  font-size: max(15px, calc(22 * var(--u)));
+  line-height: 1.4;
+  text-align: center;
+  color: var(--c-text-soft);
+  margin-bottom: calc(24 * var(--u));
+  overflow-wrap: anywhere;
+}
+.lead strong { color: var(--c-auth-label); }
+
+/* Código en una sola caja, con las letras separadas para leerlas bien */
+.code-input {
+  text-align: center;
+  letter-spacing: 0.35em;
+  padding-left: 0.35em;
+  font-size: max(20px, calc(40 * var(--u)));
+}
+
+.verify-card .btn-submit {
+  display: block;
+  margin: calc(20 * var(--u)) auto 0;
+}

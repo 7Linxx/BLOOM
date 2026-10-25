@@ -1,0 +1,11 @@
+.login-card {
+  max-width: calc(514 * var(--u));
+  padding: calc(30 * var(--u)) calc(62 * var(--u)) calc(30 * var(--u));
+}
+
+.login-card .auth-title { font-size: calc(96 * var(--u)); }
+
+.login-card .btn-submit {
+  display: block;
+  margin: calc(41 * var(--u)) auto 0;
+}

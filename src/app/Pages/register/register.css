@@ -1,0 +1,41 @@
+.registro-card {
+  --field-h: calc(52 * var(--u));
+  --label-size: calc(25 * var(--u));
+
+  max-width: calc(921 * var(--u));
+  padding: calc(26 * var(--u)) calc(45 * var(--u)) calc(22 * var(--u));
+}
+
+.registro-card .auth-title {
+  font-size: calc(72 * var(--u));
+  margin-bottom: calc(18 * var(--u));
+}
+
+/* Dos columnas independientes: datos personales | fecha, correo, contraseñas y botón */
+.registro-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: calc(50 * var(--u));
+}
+
+.registro-col {
+  display: flex;
+  flex-direction: column;
+  gap: calc(8 * var(--u));
+}
+.registro-col .field { margin-bottom: 0; }
+
+/* El botón queda abajo de la columna derecha, centrado */
+.registro-col .btn-submit {
+  margin-top: auto;
+  align-self: center;
+}
+
+/* Pantallas angostas: una sola columna */
+@media (max-width: 800px) {
+  .registro-grid {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: calc(8 * var(--u));
+  }
+  .registro-col .btn-submit { margin-top: calc(14 * var(--u)); }
+}

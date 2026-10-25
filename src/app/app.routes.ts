@@ -1,7 +1,27 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'home', pathMatch: 'full' },
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  {
+    path: 'verify',
+    title: 'Bloom | Verificar correo',
+    loadComponent: () => import('./Pages/verify/verify').then(m => m.Verify),
+  },
+  {
+    path: 'survey',
+    title: 'Bloom | Encuesta inicial',
+    loadComponent: () => import('./Pages/survey/survey').then(m => m.Survey),
+  },
+  {
+    path: 'login',
+    title: 'Bloom | Ingresar',
+    loadComponent: () => import('./Pages/login/login').then(m => m.Login),
+  },
+  {
+    path: 'register',
+    title: 'Bloom | Crear cuenta',
+    loadComponent: () => import('./Pages/register/register').then(m => m.Register),
+  },
   {
     path: 'home',
     title: 'Bloom | Home',
