@@ -1,6 +1,7 @@
 
 <main class="calendar-page">
 
+  <!-- ENCABEZADO -->
   <section class="calendar-heading">
     <div>
       <h1>Tu calendario <span>✿</span></h1>
@@ -12,6 +13,7 @@
 
   <section class="calendar-layout">
 
+    <!-- CALENDARIO -->
     <div class="calendar-card">
 
       <div class="calendar-top">
@@ -37,12 +39,14 @@
         </div>
       </div>
 
+      <!-- DÍAS DE LA SEMANA -->
       <div class="weekdays">
         @for (day of ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']; track day) {
           <span>{{ day }}</span>
         }
       </div>
 
+      <!-- DÍAS DEL CALENDARIO -->
       <div class="calendar-grid">
         @for (day of calendarDays(); track day.key) {
           <button
@@ -56,6 +60,8 @@
             [class.fertile]="day.kind === 'fertile'"
             [class.ovulation]="day.kind === 'ovulation'"
             [class.late]="day.kind === 'late'"
+            [class.has-record]="day.hasRecord"
+            [class.future]="day.future"
             [attr.aria-label]="day.date.toLocaleDateString('es-CO')"
             [attr.aria-pressed]="isSelected(day)"
             (click)="selectDay(day)">
@@ -65,10 +71,15 @@
             @if (day.kind === 'ovulation') {
               <span class="day-decoration">✿</span>
             }
+
+            @if (day.hasRecord) {
+              <span class="record-indicator"></span>
+            }
           </button>
         }
       </div>
 
+      <!-- LEYENDA -->
       <div class="calendar-legend">
         @for (item of legend; track item.kind) {
           <div class="legend-item">
@@ -80,50 +91,29 @@
 
     </div>
 
-    <aside class="calendar-sidebar">
+    <!-- PANELES INFERIORES -->
+    <section class="calendar-bottom">
 
-      <div class="cycle-summary">
-        <span class="summary-decoration">✦</span>
-        <span class="summary-label">TU CICLO</span>
-        <h3>Un ciclo, muchos cambios.</h3>
-
-        <div class="summary-item">
-          <div class="summary-icon period-icon">♡</div>
-          <div>
-            <span>Próxima menstruación</span>
-            <strong>
-              @if (daysUntilPeriod === 0) {
-                Hoy
-              } @else {
-                En {{ daysUntilPeriod }} días
-              }
-            </strong>
-          </div>
-        </div>
-
-        <div class="summary-item">
-          <div class="summary-icon ovulation-icon">✿</div>
-          <div>
-            <span>Próxima ovulación</span>
-            <strong>
-              @if (daysUntilOvulation === 0) {
-                Hoy
-              } @else {
-                En {{ daysUntilOvulation }} días
-              }
-            </strong>
-          </div>
-        </div>
-      </div>
-
+      <!-- DÍA SELECCIONADO -->
       <div class="selected-day-card">
-        <span class="summary-label">DÍA SELECCIONADO</span>
 
-        <h3>{{ selectedInfo().date }}</h3>
+        <div class="selected-day-header">
+          <div>
+            <span class="summary-label">DÍA SELECCIONADO</span>
 
-        <div class="selected-status"
-             [class]="selectedInfo().kind">
-          {{ selectedInfo().description }}
+            <h3>{{ selectedInfo().date }}</h3>
+
+            <div class="selected-status"
+                 [class.confirmed]="selectedInfo().kind === 'confirmed'"
+                 [class.predicted]="selectedInfo().kind === 'predicted'"
+                 [class.fertile]="selectedInfo().kind === 'fertile'"
+                 [class.ovulation]="selectedInfo().kind === 'ovulation'"
+                 [class.late]="selectedInfo().kind === 'late'">
+              {{ selectedInfo().description }}
+            </div>
+          </div>
+
+          <span class="selected-decoration">♡</span>
         </div>
 
         @if (selectedInfo().cycleDay !== null) {
@@ -131,12 +121,203 @@
         } @else {
           <p>No hay información del ciclo para esta fecha.</p>
         }
+
+        <!-- INFORMACIÓN GUARDADA -->
+        @if (
+          selectedRecord().symptoms.length > 0 ||
+          selectedRecord().flow ||
+          selectedRecord().note
+          ) {
+          <div class="saved-information">
+
+            @if (selectedRecord().symptoms.length > 0) {
+              <div class="saved-details">
+                <strong>Síntomas registrados</strong>
+                <p>{{ selectedRecord().symptoms.join(', ') }}</p>
+              </div>
+            }
+
+            @if (selectedRecord().flow) {
+              <div class="saved-details">
+                <strong>Flujo menstrual</strong>
+                <p>{{ selectedRecord().flow }}</p>
+              </div>
+            }
+
+            @if (selectedRecord().note) {
+              <div class="saved-details">
+                <strong>Nota personal</strong>
+                <p>{{ selectedRecord().note }}</p>
+              </div>
+            }
+
+          </div>
+        }
+
+        <!-- EDITOR DEL DÍA -->
+        <div class="day-editor">
+
+          <div class="editor-heading">
+            <h4>Información del día</h4>
+            <span>✿</span>
+          </div>
+
+          @if (canEditSelected()) {
+
+            <label class="period-toggle">
+              <input
+                type="checkbox"
+                [checked]="isPeriodDraft()"
+                (change)="isPeriodDraft.set($any($event.target).checked)"
+              />
+              <span class="custom-checkbox"></span>
+              Día de menstruación
+            </label>
+
+            <div class="editor-field">
+              <label>Síntomas</label>
+
+              <div class="editor-symptoms">
+                @for (symptom of symptomsAvailable; track symptom) {
+                  <label
+                    class="editor-choice"
+                    [class.active]="isSymptomSelected(symptom)">
+                    <input
+                      type="checkbox"
+                      [checked]="isSymptomSelected(symptom)"
+                      (change)="toggleSymptom(symptom, $any($event.target).checked)"
+                    />
+                    {{ symptom }}
+                  </label>
+                }
+              </div>
+            </div>
+
+            <div class="editor-field">
+              <label for="daily-flow">Flujo menstrual</label>
+
+              <select
+                id="daily-flow"
+                [value]="flowDraft() ?? ''"
+                (change)="flowDraft.set($any($event.target).value || null)">
+                <option value="">Sin especificar</option>
+
+                @for (flow of flowOptions; track flow.value) {
+                  <option [value]="flow.value">{{ flow.label }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="editor-field">
+              <label for="daily-note">Nota personal</label>
+
+              <textarea
+                id="daily-note"
+                rows="3"
+                placeholder="¿Cómo te sentiste hoy? ¿Notaste algo diferente?"
+                [value]="noteDraft()"
+                (input)="noteDraft.set($any($event.target).value)">
+              </textarea>
+            </div>
+
+            <button
+              type="button"
+              class="save-day-button"
+              (click)="saveSelectedDay()">
+              Guardar información
+              <span>♡</span>
+            </button>
+
+          } @else {
+
+            <p class="future-message">
+              ✿ Este día todavía no ha llegado. Podrás registrar información
+              cuando sea hoy o haya pasado.
+            </p>
+
+          }
+
+        </div>
       </div>
 
-    </aside>
+      <!-- RESUMEN DEL CICLO -->
+      <aside class="cycle-summary">
+
+        <span class="summary-decoration">✦</span>
+        <span class="summary-label">TU CICLO</span>
+
+        <h3>Un ciclo, muchos cambios.</h3>
+
+        <div class="summary-item">
+          <div class="summary-icon period-icon">♡</div>
+
+          <div>
+            <span>Próxima menstruación</span>
+
+            @if (daysUntilPeriod() !== null) {
+              @if (daysUntilPeriod()! < 0) {
+                <strong>Retrasada {{ -daysUntilPeriod()! }} días</strong>
+              } @else if (daysUntilPeriod() === 0) {
+                <strong>Se espera hoy</strong>
+              } @else {
+                <strong>En {{ daysUntilPeriod() }} días</strong>
+              }
+            } @else {
+              <strong>Sin datos suficientes</strong>
+            }
+          </div>
+        </div>
+
+        <div class="summary-item">
+          <div class="summary-icon ovulation-icon">✿</div>
+
+          <div>
+            <span>Próxima ovulación</span>
+
+            @if (daysUntilOvulation() !== null) {
+              @if (daysUntilOvulation() === 0) {
+                <strong>Hoy</strong>
+              } @else {
+                <strong>En {{ daysUntilOvulation() }} días</strong>
+              }
+            } @else {
+              <strong>Sin datos suficientes</strong>
+            }
+          </div>
+        </div>
+
+        <div class="summary-item">
+          <div class="summary-icon duration-icon">◷</div>
+
+          <div>
+            <span>Duración estimada del ciclo</span>
+            <strong>{{ cycleLength() }} días</strong>
+          </div>
+        </div>
+
+        <div class="summary-item">
+          <div class="summary-icon day-icon">♡</div>
+
+          <div>
+            <span>Día actual del ciclo</span>
+
+            <strong>
+              @if (currentCycleDay() !== null) {
+                Día {{ currentCycleDay() }}
+              } @else {
+                Sin información
+              }
+            </strong>
+          </div>
+        </div>
+
+      </aside>
+
+    </section>
 
   </section>
 
+  <!-- NOTA INFORMATIVA -->
   <p class="calendar-disclaimer">
     Las fechas y fases son estimaciones basadas en la información registrada.
     No constituyen una confirmación médica ni un método anticonceptivo.

@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
+import { CycleService } from './Services/cycle.service';
 
 export interface RegisterData {
   primerNombre: string;
@@ -47,6 +48,8 @@ export interface SurveyData {
  */
 @Injectable({ providedIn: 'root' })
 export class Registration {
+  private readonly cycleService = inject(CycleService);
+
   private readonly _email = signal<string | null>(null);
   private readonly _nickname = signal<string | null>(null);
   private readonly _verified = signal(false);
@@ -85,8 +88,7 @@ export class Registration {
    * Guarda las respuestas de la encuesta inicial.
    */
   async saveSurvey(data: SurveyData): Promise<void> {
-    // TODO: POST /users/me/survey con data.
-    void data;
+    this.cycleService.initializeFromSurvey(data);
     this.reset();
   }
 
@@ -96,3 +98,5 @@ export class Registration {
     this._verified.set(false);
   }
 }
+
+
