@@ -1,311 +1,299 @@
-<div class="contenedor">
+<main class="home-content">
 
-  <!-- ENCABEZADO -->
-  <section class="encabezado">
+    <!-- BIENVENIDA -->
+    <header class="welcome-section">
+      <div>
+        <span class="eyebrow">TU ESPACIO, TU RITMO 🌷</span>
 
-    <div class="titulo">
-      <span class="decoracion">✦</span>
-      <h1 class="app-title">Bloom</h1>
-    </div>
+        <h1>
+          {{ greeting() }},
+          <span>{{ apodo() }}</span>
+        </h1>
 
-    <div class="logo">
-      <span>App Logo</span>
+        <p class="welcome-date">{{ fechaLarga }}</p>
 
-      <div class="logo-decoration uno"></div>
-      <div class="logo-decoration dos"></div>
-      <div class="logo-decoration tres"></div>
-    </div>
-
-  </section>
-
-
-  <!-- VISTA PRINCIPAL -->
-  <section class="contenido">
-
-    <!-- MINI CALENDARIO -->
-    <div class="mini-calendar">
-
-      <div class="calendar-header">
-
-        <button class="calendar-arrow">‹</button>
-
-        <h2>Calendar</h2>
-
-        <button class="calendar-arrow">›</button>
-
-      </div>
-
-      <div class="calendar-days">
-        <span>L</span>
-        <span>M</span>
-        <span>X</span>
-        <span>J</span>
-        <span>V</span>
-        <span>S</span>
-        <span>D</span>
-      </div>
-
-      <div class="calendar-grid">
-
-        <span></span>
-        <span></span>
-        <span>1</span>
-        <span>2</span>
-        <span>3</span>
-        <span>4</span>
-        <span>5</span>
-
-        <span>6</span>
-        <span>7</span>
-        <span>8</span>
-        <span>9</span>
-        <span>10</span>
-        <span>11</span>
-        <span>12</span>
-
-        <span>13</span>
-        <span>14</span>
-        <span>15</span>
-        <span class="dia-activo">16</span>
-        <span>17</span>
-        <span>18</span>
-        <span>19</span>
-
-        <span>20</span>
-        <span>21</span>
-        <span>22</span>
-        <span>23</span>
-        <span>24</span>
-        <span>25</span>
-        <span>26</span>
-
-        <span>27</span>
-        <span>28</span>
-        <span>29</span>
-        <span>30</span>
-        <span>31</span>
-        <span></span>
-        <span></span>
-
-      </div>
-
-    </div>
-
-
-    <!-- INFORMACIÓN -->
-    <div class="informacion">
-
-      <div class="texto">
-
-        <div class="linea larga"></div>
-        <div class="linea"></div>
-        <div class="linea corta"></div>
-
-        <p>
-          Organiza tus actividades,
-          cuida de ti y disfruta cada día.
+        <p class="welcome-description">
+          Este es un espacio para escucharte, conocerte y cuidarte.
+          Vamos paso a paso, a tu manera.
         </p>
-
       </div>
 
-      <div class="botones">
+      <div class="welcome-decoration" aria-hidden="true">
+        <span class="flower flower-one">✿</span>
+        <span class="flower flower-two">✿</span>
+        <span class="flower flower-three">❀</span>
+        <div class="welcome-heart">♡</div>
+      </div>
+    </header>
 
-        <a href="#calendar-preview" class="boton">
-          Calendar
+    <!-- RESUMEN DEL CICLO -->
+    <section class="section cycle-section">
+      <div class="section-heading">
+        <div>
+
+          <h2>Tu ciclo menstrual</h2>
+
+        </div>
+
+        <a routerLink="/calendar" class="text-link">
+          Ver calendario <span>→</span>
         </a>
-
-        <a href="#care-preview" class="boton">
-          Care
-        </a>
-
       </div>
 
-    </div>
+      <div class="cycle-card">
+        <div class="cycle-visual">
+          <svg class="cycle-ring" viewBox="0 0 200 200" role="img"
+               aria-label="Progreso estimado del ciclo menstrual">
+            <circle
+              class="ring-track"
+              cx="100"
+              cy="100"
+              [attr.r]="R"
+            />
 
-  </section>
+            <circle
+              class="ring-period"
+              cx="100"
+              cy="100"
+              [attr.r]="R"
+              [attr.stroke-dasharray]="periodArc().dasharray"
+              [attr.stroke-dashoffset]="periodArc().dashoffset"
+            />
 
+            <circle
+              class="ring-fertile"
+              cx="100"
+              cy="100"
+              [attr.r]="R"
+              [attr.stroke-dasharray]="fertileArc().dasharray"
+              [attr.stroke-dashoffset]="fertileArc().dashoffset"
+            />
 
-  <!-- VISTAZOS DE LAS OTRAS PÁGINAS -->
-  <section class="vistas">
+            <circle
+              class="ring-today"
+              [attr.cx]="marker().x"
+              [attr.cy]="marker().y"
+              r="7"
+            />
+          </svg>
 
-    <h2 class="titulo-seccion">
-      Your little world
-    </h2>
-
-
-    <div class="vistas-grid">
-
-      <!-- CALENDAR -->
-      <article class="vista-card" id="calendar-preview">
-
-        <div class="vista-titulo">
-          <h3>Calendar</h3>
-          <span>✦</span>
-        </div>
-
-        <div class="vista-calendar">
-
-          <div class="vista-calendar-header">
-            <span>September</span>
+          <div class="cycle-center">
+            <span>DÍA</span>
+            <strong>{{ cycleDay() }}</strong>
+            <small>de {{ cycleLength() }}</small>
           </div>
-
-          <div class="vista-calendar-grid">
-
-            <span>L</span>
-            <span>M</span>
-            <span>X</span>
-            <span>J</span>
-            <span>V</span>
-            <span>S</span>
-            <span>D</span>
-
-            <span>1</span>
-            <span>2</span>
-            <span>3</span>
-            <span>4</span>
-            <span>5</span>
-            <span>6</span>
-            <span>7</span>
-
-            <span>8</span>
-            <span>9</span>
-            <span class="mini-dia">10</span>
-            <span>11</span>
-            <span>12</span>
-            <span>13</span>
-            <span>14</span>
-
-            <span>15</span>
-            <span>16</span>
-            <span>17</span>
-            <span>18</span>
-            <span>19</span>
-            <span>20</span>
-            <span>21</span>
-
-          </div>
-
         </div>
 
-        <p class="vista-descripcion">
-          Organiza tus días y recuerda tus actividades.
-        </p>
+        <div class="cycle-information">
+          <span class="phase-tag" [class]=" 'phase-tag ' + phase().tone ">
+            {{ phase().name }}
+          </span>
 
-      </article>
+          <h3>{{ phase().msg }}</h3>
 
+          <p class="cycle-description">
+            Tu ciclo es único. Estas fechas son estimaciones que pueden
+            cambiar de un mes a otro.
+          </p>
 
-      <!-- CARE -->
-      <article class="vista-card" id="care-preview">
+          <div class="cycle-dates">
+            <div class="date-item">
+              <span class="date-icon">🩸</span>
+              <div>
+                <small>Próximo periodo estimado</small>
+                <strong>{{ nextPeriod() }}</strong>
+              </div>
+            </div>
 
-        <div class="vista-titulo">
-          <h3>Care</h3>
-          <span>♡</span>
-        </div>
-
-        <div class="care-preview">
-
-          <div class="care-item">
-            <span class="care-icon">♡</span>
-
-            <div>
-              <strong>Water</strong>
-              <small>Stay hydrated</small>
+            <div class="date-item">
+              <span class="date-icon">🌸</span>
+              <div>
+                <small>Próxima ovulación estimada</small>
+                <strong>{{ nextOvulation() }}</strong>
+              </div>
             </div>
           </div>
 
-          <div class="care-item">
-            <span class="care-icon">☀</span>
+          @if (periodoRetrasado()) {
+            <p class="late-message">
+              Tu periodo presenta un retraso según la estimación.
+              Recuerda que el calendario no confirma un embarazo ni
+              sustituye una valoración médica.
+            </p>
+          }
+        </div>
+      </div>
 
-            <div>
-              <strong>Sleep</strong>
-              <small>Rest your body</small>
+      <div class="cycle-legend">
+        @for (item of legend; track item.kind) {
+          <div class="legend-item">
+            <span class="legend-dot" [class]="'legend-dot ' + item.kind"></span>
+            {{ item.label }}
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- ESTADO DE ÁNIMO -->
+    <section class="section mood-section">
+      <div class="section-heading">
+        <div>
+
+          <h2>¿Cómo te sientes hoy?</h2>
+
+        </div>
+
+        <span class="section-decoration">♡</span>
+      </div>
+
+      <div class="mood-card">
+        <div class="mood-options">
+          @for (mood of moods; track mood.label) {
+            <button
+              type="button"
+              class="mood-option"
+              [class.selected]="selectedMood() === mood.label"
+              [attr.aria-pressed]="selectedMood() === mood.label"
+              (click)="pickMood(mood.label)">
+
+              <span class="mood-emoji">{{ mood.emoji }}</span>
+              <span>{{ mood.label }}</span>
+            </button>
+          }
+        </div>
+
+        @if (selectedMood()) {
+          <p class="mood-feedback">
+            ¡Gracias por compartir cómo te sientes hoy! 💗
+          </p>
+        } @else {
+          <p class="mood-hint">
+            No hay respuestas correctas o incorrectas. Escúchate con cariño.
+          </p>
+        }
+
+        <a routerLink="/care" class="primary-link">
+          Ir a mi registro <span>→</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- SEMANA -->
+    <section class="section week-section">
+      <div class="section-heading">
+        <div>
+
+          <h2>Esta semana</h2>
+
+        </div>
+
+        <a routerLink="/calendar" class="text-link">
+          Abrir calendario <span>→</span>
+        </a>
+      </div>
+
+      <div class="week-card">
+        <div class="week-days">
+          @for (day of week(); track $index) {
+            <div class="week-day" [class.today]="day.isToday">
+              <span class="day-label">{{ day.label }}</span>
+
+              <span
+                class="day-number"
+                [class]="'day-number ' + day.kind">
+                {{ day.num }}
+              </span>
+
+              @if (day.isToday) {
+                <span class="today-label">HOY</span>
+              } @else if (day.hasNote) {
+                <span class="note-indicator">♡</span>
+              } @else {
+                <span class="day-placeholder"></span>
+              }
             </div>
-          </div>
+          }
+        </div>
 
-          <div class="care-item">
-            <span class="care-icon">✿</span>
+        <div class="week-note">
+          <span>🌷</span>
+          Las fechas futuras son estimaciones y pueden cambiar.
+        </div>
+      </div>
+    </section>
 
-            <div>
-              <strong>Self care</strong>
-              <small>Take a moment</small>
+    <!-- ESTADÍSTICAS -->
+    <section class="section stats-section">
+      <div class="section-heading">
+        <div>
+
+          <h2>Tu resumen</h2>
+
+        </div>
+
+        <a routerLink="/analisis" class="text-link">
+          Ver estadísticas <span>→</span>
+        </a>
+      </div>
+
+      <div class="stats-list">
+        @for (stat of stats(); track stat.label) {
+          <article class="stat-item">
+            <span class="stat-icon">{{ stat.icon }}</span>
+            <div class="stat-information">
+              <span>{{ stat.label }}</span>
+              <strong>{{ stat.value }} <small>{{ stat.unit }}</small></strong>
             </div>
-          </div>
+          </article>
+        }
+      </div>
+
+      <div class="symptom-note">
+        <span class="symptom-icon">🌼</span>
+        <div>
+          <small>Síntoma registrado con mayor frecuencia</small>
+          <strong>{{ sintomaFrecuente() }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- ARTÍCULOS -->
+    <section class="section articles-section">
+      <div class="section-heading">
+        <div>
+
+          <h2>Un poco de inspiración</h2>
 
         </div>
 
-        <p class="vista-descripcion">
-          Pequeños recordatorios para cuidar de ti.
-        </p>
+        <a routerLink="/articulos" class="text-link">
+          Ver todos <span>→</span>
+        </a>
+      </div>
 
-      </article>
+      <div class="articles-list">
+        @for (article of articles(); track article.id) {
+          <article class="article-item" [class]="'article-item ' + article.tono">
+            <div class="article-decoration">
+              @if (article.tono === 'rose') {
+                <span>🌷</span>
+              } @else if (article.tono === 'butter') {
+                <span>🌼</span>
+              } @else {
+                <span>🪻</span>
+              }
+            </div>
 
-
-      <!-- NOTAS -->
-      <article class="vista-card">
-
-        <div class="vista-titulo">
-          <h3>Notes</h3>
-          <span>✎</span>
-        </div>
-
-        <div class="notas-preview">
-
-          <div class="nota">
-            <div></div>
-            <div></div>
-            <div></div>
-          </div>
-
-          <div class="nota">
-            <div></div>
-            <div></div>
-            <div></div>
-          </div>
-
-        </div>
-
-        <p class="vista-descripcion">
-          Guarda tus ideas, pensamientos y pendientes.
-        </p>
-
-      </article>
-
-
-      <!-- HABITS -->
-      <article class="vista-card">
-
-        <div class="vista-titulo">
-          <h3>Habits</h3>
-          <span>♡</span>
-        </div>
-
-        <div class="habitos-preview">
-
-          <div class="habito">
-            <span>Drink water</span>
-            <div class="check"></div>
-          </div>
-
-          <div class="habito">
-            <span>Read</span>
-            <div class="check"></div>
-          </div>
-
-          <div class="habito">
-            <span>Exercise</span>
-            <div class="check"></div>
-          </div>
-
-        </div>
-
-        <p class="vista-descripcion">
-          Lleva un pequeño seguimiento de tus hábitos.
-        </p>
-
-      </article>
-
-    </div>
-
-  </section>
-
-</div>
+            <div class="article-information">
+              <span class="article-category">{{ article.categoria }}</span>
+              <h3>{{ article.titulo }}</h3>
+              <p>{{ article.resumen }}</p>
+              <a [routerLink]="article.enlace" class="article-link">
+                Leer artículo <span>→</span>
+              </a>
+            </div>
+          </article>
+        }
+      </div>
+    </section>
+</main>

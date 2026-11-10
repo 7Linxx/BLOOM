@@ -1,60 +1,242 @@
-<main class="auth">
 
-  <a routerLink="/home" class="brand">
+<main class="register-page">
+
+  <a routerLink="/home" class="register-brand">
     <img src="assets/logo_bloom.png" alt="Bloom, ir al inicio">
-   
   </a>
 
-  <section class="auth-card registro-card" aria-labelledby="registro-title">
-    <h1 id="registro-title" class="auth-title">Registrarse</h1>
+  <section class="register-card" aria-labelledby="register-title">
+
+    <div class="register-decoration" aria-hidden="true">✿</div>
+
+    <h1 id="register-title" class="register-title">¡Únete a Bloom!</h1>
+    <p class="register-subtitle">Un espacio para conocerte mejor ♡</p>
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-      <div class="registro-grid">
 
-        <div class="registro-col">
-          @for (f of leftFields; track f.name) {
-            <ng-container [ngTemplateOutlet]="fieldTpl" [ngTemplateOutletContext]="{ $implicit: f }" />
-          }
-        </div>
-
-        <div class="registro-col">
-          @for (f of rightFields; track f.name) {
-            <ng-container [ngTemplateOutlet]="fieldTpl" [ngTemplateOutletContext]="{ $implicit: f }" />
-          }
-
-          <button type="submit" class="btn-submit" [disabled]="sending()">
-            {{ sending() ? 'Creando…' : 'Crear Cuenta' }}
-          </button>
-        </div>
-
-      </div>
-
-      @if (serverError(); as msg) {
-        <p class="server-error" role="alert">{{ msg }}</p>
+      @if (serverError()) {
+        <p class="register-alert" role="alert">{{ serverError() }}</p>
       }
 
-      <!-- Un campo del formulario (se reutiliza en las dos columnas) -->
-      <ng-template #fieldTpl let-f>
-        <div class="field">
-          <label [for]="f.name">{{ f.label }}</label>
-          <input [id]="f.name" [type]="f.type" [formControlName]="f.name"
-                 [attr.autocomplete]="f.autocomplete"
-                 [attr.max]="f.type === 'date' ? today : null"
-                 [attr.aria-invalid]="error(f.name) ? 'true' : null"
-                 [attr.aria-describedby]="describedBy(f)">
-          @if (f.hint) {
-            <p [id]="f.name + '-hint'" class="hint">{{ f.hint }}</p>
-          }
-          @if (error(f.name); as msg) {
-            <p [id]="f.name + '-error'" class="error" role="alert">{{ msg }}</p>
+      <!-- DATOS PERSONALES -->
+
+      <fieldset class="register-group">
+        <legend>✿ Cuéntanos de ti</legend>
+
+        <div class="register-grid">
+
+          <div class="register-field" [class.invalid]="error('primerNombre')">
+            <label for="primerNombre">Primer nombre</label>
+            <input
+              id="primerNombre"
+              type="text"
+              formControlName="primerNombre"
+              autocomplete="given-name"
+              placeholder="Tu primer nombre"
+              [attr.aria-invalid]="error('primerNombre') ? 'true' : null"
+            >
+            @if (error('primerNombre')) {
+              <span class="register-error">{{ error('primerNombre') }}</span>
+            }
+          </div>
+
+          <div class="register-field">
+            <label for="segundoNombre">
+              Segundo nombre <span class="optional">(opcional)</span>
+            </label>
+            <input
+              id="segundoNombre"
+              type="text"
+              formControlName="segundoNombre"
+              autocomplete="additional-name"
+              placeholder="Tu segundo nombre"
+            >
+            @if (error('segundoNombre')) {
+              <span class="register-error">{{ error('segundoNombre') }}</span>
+            }
+          </div>
+
+          <div class="register-field" [class.invalid]="error('primerApellido')">
+            <label for="primerApellido">Primer apellido</label>
+            <input
+              id="primerApellido"
+              type="text"
+              formControlName="primerApellido"
+              autocomplete="family-name"
+              placeholder="Tu primer apellido"
+              [attr.aria-invalid]="error('primerApellido') ? 'true' : null"
+            >
+            @if (error('primerApellido')) {
+              <span class="register-error">{{ error('primerApellido') }}</span>
+            }
+          </div>
+
+          <div class="register-field">
+            <label for="segundoApellido">
+              Segundo apellido <span class="optional">(opcional)</span>
+            </label>
+            <input
+              id="segundoApellido"
+              type="text"
+              formControlName="segundoApellido"
+              autocomplete="off"
+              placeholder="Tu segundo apellido"
+            >
+            @if (error('segundoApellido')) {
+              <span class="register-error">{{ error('segundoApellido') }}</span>
+            }
+          </div>
+
+          <div class="register-field">
+            <label for="apodo">
+              ¿Cómo te llamamos? <span class="optional">(opcional)</span>
+            </label>
+            <input
+              id="apodo"
+              type="text"
+              formControlName="apodo"
+              autocomplete="nickname"
+              placeholder="Tu apodo"
+            >
+            <span class="register-hint">
+              Si lo dejas vacío, usaremos tu primer nombre.
+            </span>
+            @if (error('apodo')) {
+              <span class="register-error">{{ error('apodo') }}</span>
+            }
+          </div>
+
+          <div class="register-field" [class.invalid]="error('fechaNacimiento')">
+            <label for="fechaNacimiento">Fecha de nacimiento</label>
+            <input
+              id="fechaNacimiento"
+              type="date"
+              formControlName="fechaNacimiento"
+              autocomplete="bday"
+              [max]="today"
+              [attr.aria-invalid]="error('fechaNacimiento') ? 'true' : null"
+            >
+            @if (error('fechaNacimiento')) {
+              <span class="register-error">{{ error('fechaNacimiento') }}</span>
+            }
+          </div>
+
+        </div>
+      </fieldset>
+
+      <!-- DATOS DE LA CUENTA -->
+
+      <fieldset class="register-group account-group">
+        <legend>♡ Tu cuenta</legend>
+
+        <div class="register-field" [class.invalid]="error('email')">
+          <label for="email">Correo electrónico</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            autocomplete="email"
+            placeholder="tucorreo@ejemplo.com"
+            [attr.aria-invalid]="error('email') ? 'true' : null"
+          >
+          @if (error('email')) {
+            <span class="register-error">{{ error('email') }}</span>
           }
         </div>
-      </ng-template>
+
+        <div class="register-grid password-grid">
+
+          <div class="register-field" [class.invalid]="error('password')">
+            <label for="password">Contraseña</label>
+
+            <div class="register-password">
+              <input
+                id="password"
+                [type]="showPw() ? 'text' : 'password'"
+                formControlName="password"
+                autocomplete="new-password"
+                placeholder="Crea una contraseña"
+                [attr.aria-invalid]="error('password') ? 'true' : null"
+              >
+
+              <button
+                type="button"
+                class="register-password-toggle"
+                (click)="showPw.set(!showPw())"
+                [attr.aria-label]="showPw() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              >
+                {{ showPw() ? 'Ocultar' : 'Ver' }}
+              </button>
+            </div>
+
+            @if (error('password')) {
+              <span class="register-error">{{ error('password') }}</span>
+            }
+          </div>
+
+          <div class="register-field" [class.invalid]="error('confirmar')">
+            <label for="confirmar">Confirmar contraseña</label>
+
+            <div class="register-password">
+              <input
+                id="confirmar"
+                [type]="showPw2() ? 'text' : 'password'"
+                formControlName="confirmar"
+                autocomplete="new-password"
+                placeholder="Repite tu contraseña"
+                [attr.aria-invalid]="error('confirmar') ? 'true' : null"
+              >
+
+              <button
+                type="button"
+                class="register-password-toggle"
+                (click)="showPw2.set(!showPw2())"
+                [attr.aria-label]="showPw2() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              >
+                {{ showPw2() ? 'Ocultar' : 'Ver' }}
+              </button>
+            </div>
+
+            @if (error('confirmar')) {
+              <span class="register-error">{{ error('confirmar') }}</span>
+            }
+          </div>
+
+        </div>
+
+        <div class="password-rules">
+          <p class="password-rules-title">Tu contraseña debe tener:</p>
+
+          <ul>
+            @for (rule of rules(); track rule.label) {
+              <li [class.ok]="rule.ok">
+                <span aria-hidden="true">{{ rule.ok ? '✓' : '○' }}</span>
+                {{ rule.label }}
+              </li>
+            }
+          </ul>
+        </div>
+
+      </fieldset>
+
+      <button
+        class="register-submit"
+        type="submit"
+        [disabled]="sending()"
+      >
+        {{ sending() ? 'Creando tu cuenta...' : 'Crear mi cuenta ♡' }}
+      </button>
+
     </form>
 
-    <p class="auth-switch">
-      ¿Ya tienes cuenta? <a routerLink="/login">Ingresa</a>
+    <p class="register-login">
+      ¿Ya tienes cuenta?
+      <a routerLink="/login">¡Inicia sesión!</a>
     </p>
+
   </section>
+
+  <span class="register-flower flower-one" aria-hidden="true">✿</span>
+  <span class="register-flower flower-two" aria-hidden="true">♡</span>
 
 </main>

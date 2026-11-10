@@ -1,1 +1,145 @@
-<p>calendar works!</p>
+
+<main class="calendar-page">
+
+  <section class="calendar-heading">
+    <div>
+      <h1>Tu calendario <span>✿</span></h1>
+      <p>Tu ciclo, a tu propio ritmo.</p>
+    </div>
+
+    <div class="heading-decoration">♡</div>
+  </section>
+
+  <section class="calendar-layout">
+
+    <div class="calendar-card">
+
+      <div class="calendar-top">
+        <div>
+          <span class="calendar-label">CALENDARIO MENSTRUAL</span>
+          <h2>{{ monthLabel() }}</h2>
+        </div>
+
+        <div class="month-controls">
+          <button
+            type="button"
+            aria-label="Mes anterior"
+            (click)="previousMonth()">
+            ‹
+          </button>
+
+          <button
+            type="button"
+            aria-label="Mes siguiente"
+            (click)="nextMonthView()">
+            ›
+          </button>
+        </div>
+      </div>
+
+      <div class="weekdays">
+        @for (day of ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']; track day) {
+          <span>{{ day }}</span>
+        }
+      </div>
+
+      <div class="calendar-grid">
+        @for (day of calendarDays(); track day.key) {
+          <button
+            type="button"
+            class="calendar-day"
+            [class.other-month]="!day.currentMonth"
+            [class.today]="day.today"
+            [class.selected]="isSelected(day)"
+            [class.confirmed]="day.kind === 'confirmed'"
+            [class.predicted]="day.kind === 'predicted'"
+            [class.fertile]="day.kind === 'fertile'"
+            [class.ovulation]="day.kind === 'ovulation'"
+            [class.late]="day.kind === 'late'"
+            [attr.aria-label]="day.date.toLocaleDateString('es-CO')"
+            [attr.aria-pressed]="isSelected(day)"
+            (click)="selectDay(day)">
+
+            <span>{{ day.number }}</span>
+
+            @if (day.kind === 'ovulation') {
+              <span class="day-decoration">✿</span>
+            }
+          </button>
+        }
+      </div>
+
+      <div class="calendar-legend">
+        @for (item of legend; track item.kind) {
+          <div class="legend-item">
+            <span class="legend-dot" [class]="item.kind"></span>
+            <span>{{ item.label }}</span>
+          </div>
+        }
+      </div>
+
+    </div>
+
+    <aside class="calendar-sidebar">
+
+      <div class="cycle-summary">
+        <span class="summary-decoration">✦</span>
+        <span class="summary-label">TU CICLO</span>
+        <h3>Un ciclo, muchos cambios.</h3>
+
+        <div class="summary-item">
+          <div class="summary-icon period-icon">♡</div>
+          <div>
+            <span>Próxima menstruación</span>
+            <strong>
+              @if (daysUntilPeriod === 0) {
+                Hoy
+              } @else {
+                En {{ daysUntilPeriod }} días
+              }
+            </strong>
+          </div>
+        </div>
+
+        <div class="summary-item">
+          <div class="summary-icon ovulation-icon">✿</div>
+          <div>
+            <span>Próxima ovulación</span>
+            <strong>
+              @if (daysUntilOvulation === 0) {
+                Hoy
+              } @else {
+                En {{ daysUntilOvulation }} días
+              }
+            </strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="selected-day-card">
+        <span class="summary-label">DÍA SELECCIONADO</span>
+
+        <h3>{{ selectedInfo().date }}</h3>
+
+        <div class="selected-status"
+             [class]="selectedInfo().kind">
+          {{ selectedInfo().description }}
+        </div>
+
+        @if (selectedInfo().cycleDay !== null) {
+          <p>Día {{ selectedInfo().cycleDay }} de tu ciclo.</p>
+        } @else {
+          <p>No hay información del ciclo para esta fecha.</p>
+        }
+      </div>
+
+    </aside>
+
+  </section>
+
+  <p class="calendar-disclaimer">
+    Las fechas y fases son estimaciones basadas en la información registrada.
+    No constituyen una confirmación médica ni un método anticonceptivo.
+  </p>
+
+</main>

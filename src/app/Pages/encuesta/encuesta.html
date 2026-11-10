@@ -1,0 +1,325 @@
+<main class="auth survey-page">
+  <a class="brand" routerLink="/home" aria-label="Volver al inicio de BLOOM">
+    <img src="assets/logo_bloom.png" alt="BLOOM" />
+  </a>
+
+  <span class="decoration decoration-one">✿</span>
+  <span class="decoration decoration-two">♡</span>
+  <span class="decoration decoration-three">✿</span>
+  <span class="decoration decoration-four">♡</span>
+
+  <section class="auth-card survey-card">
+    <div class="survey-heading">
+      <span class="heading-flower">✿</span>
+      <h1 class="auth-title">¡Queremos conocerte!</h1>
+      <p class="lead">
+        Un poquito sobre ti para que tu experiencia en BLOOM sea más especial ♡
+      </p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+
+      <!-- INFORMACIÓN PERSONAL -->
+      <section class="survey-section">
+        <div class="section-heading">
+          <span class="section-number">01</span>
+          <div>
+            <h2>Sobre ti</h2>
+            <p>Algunos datos para conocerte mejor.</p>
+          </div>
+        </div>
+
+        <div class="survey-grid">
+          <div class="field">
+            <label for="altura">¿Cuánto mides?</label>
+
+            <div class="input-unit">
+              <input
+                id="altura"
+                type="number"
+                formControlName="altura"
+                placeholder="Ej. 165"
+                min="100"
+                max="230"
+              />
+              <span>cm</span>
+            </div>
+
+            @if (alturaError) {
+              <small class="field-error">{{ alturaError }}</small>
+            }
+          </div>
+
+          <div class="field">
+            <label for="peso">¿Cuánto pesas?</label>
+
+            <div class="input-unit">
+              <input
+                id="peso"
+                type="number"
+                formControlName="peso"
+                placeholder="Ej. 60"
+                min="30"
+                max="250"
+              />
+              <span>kg</span>
+            </div>
+
+            @if (pesoError) {
+              <small class="field-error">{{ pesoError }}</small>
+            }
+          </div>
+
+          <div class="field full-field">
+            <label for="sueno">¿Cuántas horas duermes normalmente?</label>
+
+            <div class="input-unit">
+              <input
+                id="sueno"
+                type="number"
+                formControlName="sueno"
+                placeholder="Ej. 8"
+                min="1"
+                max="16"
+              />
+              <span>horas</span>
+            </div>
+
+            @if (suenoError) {
+              <small class="field-error">{{ suenoError }}</small>
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- INFORMACIÓN DEL CICLO -->
+      <section class="survey-section">
+        <div class="section-heading">
+          <span class="section-number">02</span>
+          <div>
+            <h2>Conozcamos tu ciclo</h2>
+            <p>
+              Comparte lo que recuerdes. No tienes que completar los datos que
+              desconozcas.
+            </p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="duracionCiclo">
+            ¿Cuántos días dura normalmente tu ciclo?
+          </label>
+
+          <p class="field-hint">
+            Desde el primer día de una menstruación hasta el día anterior a la
+            siguiente.
+          </p>
+
+          <div class="input-unit">
+            <input
+              id="duracionCiclo"
+              type="number"
+              formControlName="duracionCiclo"
+              placeholder="Ej. 28"
+              min="15"
+              max="60"
+            />
+            <span>días</span>
+          </div>
+
+          @if (cicloError) {
+            <small class="field-error">{{ cicloError }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="duracionPeriodo">
+            ¿Cuántos días dura normalmente tu menstruación?
+          </label>
+
+          <div class="input-unit">
+            <input
+              id="duracionPeriodo"
+              type="number"
+              formControlName="duracionPeriodo"
+              placeholder="Ej. 5"
+              min="1"
+              max="14"
+            />
+            <span>días</span>
+          </div>
+
+          @if (periodoError) {
+            <small class="field-error">{{ periodoError }}</small>
+          }
+        </div>
+
+        <div class="cycles">
+          <div class="cycles-heading">
+            <div>
+              <h3>Últimas menstruaciones</h3>
+              <p>Registra hasta tres fechas, comenzando por la más reciente.</p>
+            </div>
+
+            <span class="optional-tag">Opcional</span>
+          </div>
+
+          <div formArrayName="ciclos" class="cycle-list">
+            @for (cycle of ciclos.controls; track $index; let i = $index) {
+              <div class="cycle-card" [formGroupName]="i">
+                <div class="cycle-top">
+                  <h4>{{ cycleName(i) }}</h4>
+
+                  @if (ciclos.length > 1) {
+                    <button
+                      type="button"
+                      class="remove-cycle"
+                      (click)="removeCycle(i)"
+                      aria-label="Eliminar menstruación"
+                    >
+                      ✕
+                    </button>
+                  }
+                </div>
+
+                <div class="cycle-grid">
+                  <div class="field">
+                    <label [for]="'inicio-' + i">Fecha de inicio</label>
+
+                    <input
+                      [id]="'inicio-' + i"
+                      type="date"
+                      formControlName="inicio"
+                      [max]="today"
+                    />
+
+                    @if (cycleError(i, 'inicio')) {
+                      <small class="field-error">
+                        {{ cycleError(i, 'inicio') }}
+                      </small>
+                    }
+                  </div>
+
+                  <div class="field">
+                    <label [for]="'fin-' + i">Fecha de finalización</label>
+
+                    <input
+                      [id]="'fin-' + i"
+                      type="date"
+                      formControlName="fin"
+                      [max]="today"
+                    />
+
+                    @if (cycleError(i, 'fin')) {
+                      <small class="field-error">
+                        {{ cycleError(i, 'fin') }}
+                      </small>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          @if (ciclos.length < maxCycles) {
+            <button
+              type="button"
+              class="add-cycle"
+              (click)="addCycle()"
+            >
+              <span>＋</span>
+              Agregar otra menstruación
+            </button>
+          }
+        </div>
+      </section>
+
+      <!-- SÍNTOMAS -->
+      <section class="survey-section">
+        <div class="section-heading">
+          <span class="section-number">03</span>
+          <div>
+            <h2>¿Qué síntomas sueles experimentar?</h2>
+            <p>Puedes seleccionar todas las opciones que correspondan.</p>
+          </div>
+        </div>
+
+        <div class="symptoms-grid">
+          @for (symptom of sintomasDisponibles; track symptom) {
+            <label
+              class="choice-card symptom-choice"
+              [class.selected]="isSymptomSelected(symptom)"
+            >
+              <input
+                type="checkbox"
+                [checked]="isSymptomSelected(symptom)"
+                (change)="toggleSymptom(symptom, $any($event.target).checked)"
+              />
+
+              <span class="custom-checkbox"></span>
+              <span>{{ symptom }}</span>
+            </label>
+          }
+        </div>
+      </section>
+
+      <!-- FLUJO MENSTRUAL -->
+      <section class="survey-section">
+        <div class="section-heading">
+          <span class="section-number">04</span>
+          <div>
+            <h2>¿Cómo suele ser tu flujo menstrual?</h2>
+            <p>Selecciona la opción que mejor te describa.</p>
+          </div>
+        </div>
+
+        <div class="flow-options">
+          @for (flow of tiposFlujo; track flow.value) {
+            <label
+              class="flow-card"
+              [class.selected]="form.controls.flujoMenstrual.value === flow.value"
+            >
+              <input
+                type="radio"
+                formControlName="flujoMenstrual"
+                [value]="flow.value"
+              />
+
+              <span class="radio-indicator"></span>
+
+              <span class="flow-content">
+                <strong>{{ flow.label }}</strong>
+                <small>{{ flow.description }}</small>
+              </span>
+            </label>
+          }
+        </div>
+      </section>
+
+      <div class="survey-bottom">
+        <p class="privacy-note">
+          <span>♡</span>
+          Tu información es personal. Puedes omitir los datos que no conozcas.
+        </p>
+
+        @if (serverError()) {
+          <p class="server-error" role="alert">{{ serverError() }}</p>
+        }
+
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="sending()"
+        >
+          {{ sending() ? 'Guardando...' : 'Comenzar mi experiencia' }}
+
+          @if (!sending()) {
+            <span>→</span>
+          }
+        </button>
+
+        <p class="bottom-decoration">Hecho con cariño para ti ✿</p>
+      </div>
+    </form>
+  </section>
+</main>

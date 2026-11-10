@@ -1,10 +1,52 @@
-<div class="navbar">
-  <div class="navbar-logo"></div>
-  <nav class="menu">
-    <a routerLink="/home" routerLinkActive="active" ariaCurrentWhenActive="page" class="menu-item">Home</a>
-    <a routerLink="/calendar" routerLinkActive="active" ariaCurrentWhenActive="page" class="menu-item">Calendario</a>
-    <a routerLink="/analisis" routerLinkActive="active" ariaCurrentWhenActive="page" class="menu-item">Análisis</a>
-    <a routerLink="/care" routerLinkActive="active" ariaCurrentWhenActive="page" class="menu-item">Auto cuidado</a>
-    <a routerLink="/about" routerLinkActive="active" ariaCurrentWhenActive="page" class="menu-item">Sobre nosotros</a>
+
+<header class="navbar">
+  <a routerLink="/home" class="navbar-brand" aria-label="BLOOM - Inicio">
+    <img src="assets/logo_bloom.png" alt="Logo de BLOOM">
+    <span>BLOOM</span>
+  </a>
+
+  <nav class="menu" aria-label="Navegación principal">
+    <a
+      routerLink="/home"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="menu-item">
+      Inicio
+    </a>
+
+    <a
+      routerLink="/calendar"
+      routerLinkActive="active"
+      class="menu-item">
+      Calendario
+    </a>
+
+    <a
+      routerLink="/care"
+      routerLinkActive="active"
+      class="menu-item">
+      Registro
+    </a>
+
+    <a
+      routerLink="/analisis"
+      routerLinkActive="active"
+      class="menu-item">
+      Estadísticas
+    </a>
+
+    <a
+      routerLink="/articulos"
+      routerLinkActive="active"
+      class="menu-item">
+      Artículos
+    </a>
+
+    <a
+      routerLink="/perfil"
+      routerLinkActive="active"
+      class="menu-item">
+      Mi perfil
+    </a>
   </nav>
-</div>
+</header>

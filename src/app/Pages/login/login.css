@@ -1,11 +1,376 @@
-.login-card {
-  max-width: calc(514 * var(--u));
-  padding: calc(30 * var(--u)) calc(62 * var(--u)) calc(30 * var(--u));
+
+:host {
+  display: block;
+  min-height: 100vh;
 }
 
-.login-card .auth-title { font-size: calc(96 * var(--u)); }
+.login-page {
+  --login-pink: #f05f83;
+  --login-dark: #c8174f;
+  --login-label: #b3245f;
 
-.login-card .btn-submit {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 110px 24px 50px;
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 240, 246, 0.35),
+      rgba(255, 214, 226, 0.25)
+    ),
+    url('/assets/background_bloom.png') center / cover no-repeat;
+
+  font-family: var(--font-body, 'Nunito', sans-serif);
+}
+
+/* LOGO */
+
+.login-brand {
+  position: absolute;
+  top: 28px;
+  left: 35px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+
+.login-brand:hover {
+  transform: scale(1.05) rotate(-2deg);
+}
+
+.login-brand img {
+  width: auto;
+  height: 65px;
+  object-fit: contain;
+}
+
+/* TARJETA */
+
+.login-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 490px);
+  padding: 42px 48px 35px;
+
+  background: rgba(255, 247, 250, 0.84);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
+  border: 3px solid rgba(255, 143, 163, 0.85);
+  border-radius: 30px;
+
+  box-shadow:
+    0 12px 35px rgba(168, 62, 96, 0.16),
+    0 4px 12px rgba(232, 84, 138, 0.10);
+
+  animation: login-appear 0.65s ease both;
+}
+
+/* DECORACIÓN */
+
+.login-decoration {
+  position: absolute;
+  top: -22px;
+  right: 25px;
+
+  display: grid;
+  place-items: center;
+
+  width: 52px;
+  height: 52px;
+
+  background: #fff6b0;
+  border: 3px solid #ffb3c6;
+  border-radius: 50%;
+
+  color: #d63a77;
+  font-size: 30px;
+
+  transform: rotate(12deg);
+  box-shadow: 0 5px 12px rgba(168, 62, 96, 0.12);
+}
+
+/* TÍTULOS */
+
+.login-title {
+  margin: 0;
+  text-align: center;
+
+  color: var(--login-pink);
+  font-family: var(--font-display, 'Fredoka', sans-serif);
+  font-size: clamp(42px, 6vw, 58px);
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.login-subtitle {
+  margin: 9px 0 35px;
+  text-align: center;
+
+  color: var(--c-text-soft, #8a5a6b);
+  font-family: var(--font-accent, Georgia, serif);
+  font-size: 18px;
+  font-style: italic;
+}
+
+/* CAMPOS */
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 23px;
+}
+
+.login-field label {
+  color: var(--login-label);
+  font-family: var(--font-display, 'Fredoka', sans-serif);
+  font-size: 19px;
+  font-weight: 500;
+}
+
+.login-field input {
+  width: 100%;
+  height: 51px;
+  padding: 0 16px;
+
+  background: rgba(255, 211, 224, 0.65);
+  border: 2px solid transparent;
+  border-radius: 12px;
+
+  color: var(--c-text, #4a1c2c);
+  font-family: var(--font-body, 'Nunito', sans-serif);
+  font-size: 15px;
+
+  transition: all 0.25s ease;
+}
+
+.login-field input::placeholder {
+  color: #a87989;
+  opacity: 0.8;
+}
+
+.login-field input:focus {
+  outline: none;
+  background: #fff4f7;
+  border-color: #f478a5;
+  box-shadow: 0 0 0 4px rgba(244, 120, 165, 0.14);
+}
+
+.login-field.invalid input {
+  border-color: #e0436a;
+}
+
+/* CONTRASEÑA */
+
+.login-password {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.login-password input {
+  padding-right: 75px;
+}
+
+.login-password-toggle {
+  position: absolute;
+  right: 12px;
+
+  padding: 6px 9px;
+
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+
+  color: var(--login-dark);
+  font-family: var(--font-body, 'Nunito', sans-serif);
+  font-size: 13px;
+  font-weight: 800;
+
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.login-password-toggle:hover {
+  background: rgba(255, 143, 163, 0.2);
+}
+
+/* ERRORES */
+
+.login-error {
+  color: #c8174f;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.login-alert {
+  padding: 11px 14px;
+  margin: 0 0 20px;
+
+  background: #ffe3ec;
+  border: 1px solid #f478a5;
+  border-radius: 10px;
+
+  color: #a3103e;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* BOTÓN */
+
+.login-submit {
   display: block;
-  margin: calc(41 * var(--u)) auto 0;
+  width: min(100%, 300px);
+  min-height: 54px;
+  margin: 34px auto 0;
+
+  background: #fff0b8;
+  border: 2px solid #ff8fa3;
+  border-radius: 14px;
+
+  color: #b3245f;
+  font-family: var(--font-display, 'Fredoka', sans-serif);
+  font-size: 23px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  box-shadow: 0 5px 0 rgba(214, 58, 119, 0.13);
+  transition: all 0.25s ease;
+}
+
+.login-submit:hover:not(:disabled) {
+  background: #ffe3a0;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(214, 58, 119, 0.16);
+}
+
+.login-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.login-submit:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+/* REGISTRO */
+
+.login-register {
+  margin: 27px 0 0;
+  text-align: center;
+
+  color: var(--c-text-soft, #8a5a6b);
+  font-size: 15px;
+}
+
+.login-register a {
+  color: var(--login-dark);
+  font-weight: 900;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.login-register a:hover {
+  color: #e8548a;
+  text-decoration: underline;
+}
+
+/* DETALLES DECORATIVOS */
+
+.login-flower {
+  position: absolute;
+  z-index: 0;
+  color: rgba(200, 23, 79, 0.45);
+  pointer-events: none;
+}
+
+.flower-one {
+  left: 12%;
+  bottom: 15%;
+  font-size: 55px;
+  transform: rotate(-18deg);
+}
+
+.flower-two {
+  right: 13%;
+  top: 25%;
+  font-size: 60px;
+  transform: rotate(15deg);
+}
+
+/* ANIMACIÓN */
+
+@keyframes login-appear {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 600px) {
+  .login-page {
+    padding: 105px 18px 35px;
+  }
+
+  .login-brand {
+    top: 18px;
+    left: 18px;
+  }
+
+  .login-brand img {
+    height: 52px;
+  }
+
+  .login-card {
+    padding: 38px 25px 30px;
+    border-radius: 24px;
+  }
+
+  .login-subtitle {
+    margin-bottom: 28px;
+  }
+
+  .login-decoration {
+    width: 43px;
+    height: 43px;
+    font-size: 25px;
+  }
+
+  .flower-one {
+    left: 2%;
+    bottom: 5%;
+    font-size: 35px;
+  }
+
+  .flower-two {
+    right: 3%;
+    top: 12%;
+    font-size: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-card {
+    animation: none;
+  }
+
+  .login-page *,
+  .login-page *::before,
+  .login-page *::after {
+    transition: none !important;
+  }
 }

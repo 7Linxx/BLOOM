@@ -5,32 +5,45 @@ export interface RegisterData {
   segundoNombre: string;
   primerApellido: string;
   segundoApellido: string;
-  /** Si la usuaria no lo escribe, ya llega con el primer nombre. */
   apodo: string;
-  fechaNacimiento: string;   // YYYY-MM-DD
+  fechaNacimiento: string;
   email: string;
   password: string;
 }
 
-export type CycleMode = 'duraciones' | 'fechas' | 'ninguno';
+export type CycleMode = 'ambos' | 'duraciones' | 'fechas' | 'ninguno';
+
+export type MenstrualFlow =
+  | 'ligero'
+  | 'moderado'
+  | 'abundante'
+  | 'variable'
+  | 'no_se';
 
 export interface SurveyData {
   alturaCm: number | null;
   pesoKg: number | null;
   horasSueno: number | null;
+
   modoCiclo: CycleMode;
   duracionCiclo: number | null;
   duracionPeriodo: number | null;
-  /** Hasta 3 ciclos, el más reciente primero. `fin` es null si no lo recuerda. */
-  ciclos: { inicio: string; fin: string | null }[];
+
+  ciclos: {
+    inicio: string;
+    fin: string | null;
+  }[];
+
+  sintomas: string[];
+  flujoMenstrual: MenstrualFlow | null;
 }
 
 /**
- * Guarda en memoria el avance del registro (registro → verificación → encuesta)
- * y es el único lugar que hablará con el backend.
+ * Guarda en memoria el avance del registro:
+ * registro → verificación → encuesta.
  *
- * Todo es de PROTOTIPO: cada método tiene un TODO con la llamada que falta.
- * Al recargar la página el avance se pierde, y las pantallas mandan de nuevo al registro.
+ * Todo es de PROTOTIPO. Cada método tiene pendiente
+ * la conexión con el backend.
  */
 @Injectable({ providedIn: 'root' })
 export class Registration {
@@ -42,33 +55,37 @@ export class Registration {
   readonly nickname = this._nickname.asReadonly();
   readonly verified = this._verified.asReadonly();
 
-  /** Crea la cuenta y dispara el envío del código al correo. */
+  /**
+   * Crea la cuenta y dispara el envío del código al correo.
+   */
   async register(data: RegisterData): Promise<void> {
-    // TODO: POST /auth/register con `data`.
-    //  - El correo es único: si ya existe, lanzar un error para mostrarlo en pantalla.
-    //  - El backend envía el código alfanumérico de 7 caracteres al correo.
-    //  - La contraseña no se guarda aquí, solo se envía.
+    // TODO: POST /auth/register con data.
     this._email.set(data.email);
     this._nickname.set(data.apodo);
     this._verified.set(false);
   }
 
-  /** Comprueba el código de 7 caracteres. */
+  /**
+   * Comprueba el código de 7 caracteres.
+   */
   async verifyCode(code: string): Promise<void> {
-    // TODO: POST /auth/verify con { email, code }. Si el código es incorrecto o venció, lanzar un error.
-    // Mientras no exista el backend, acepta cualquier código con formato válido.
+    // TODO: POST /auth/verify con { email, code }.
     void code;
     this._verified.set(true);
   }
 
-  /** Pide un código nuevo para el mismo correo. */
+  /**
+   * Pide un código nuevo para el mismo correo.
+   */
   async resendCode(): Promise<void> {
     // TODO: POST /auth/resend con { email }.
   }
 
-  /** Guarda las respuestas de la encuesta inicial. */
+  /**
+   * Guarda las respuestas de la encuesta inicial.
+   */
   async saveSurvey(data: SurveyData): Promise<void> {
-    // TODO: POST /users/me/survey con `data`.
+    // TODO: POST /users/me/survey con data.
     void data;
     this.reset();
   }

@@ -3,14 +3,22 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   {
-    path: 'verify',
-    title: 'Bloom | Verificar correo',
-    loadComponent: () => import('./Pages/verify/verify').then(m => m.Verify),
+    path: 'articulos',
+    title: 'Bloom | Artículos',
+    loadComponent: () =>
+      import('./Pages/articulos/articulos').then(m => m.Articulos)
   },
   {
-    path: 'survey',
+    path: 'verificar',
+    title: 'Bloom | Verificar correo',
+    loadComponent: () =>
+      import('./Pages/verificar/verificar').then(m => m.Verificar),
+  },
+  {
+    path: 'encuesta',
     title: 'Bloom | Encuesta inicial',
-    loadComponent: () => import('./Pages/survey/survey').then(m => m.Survey),
+    loadComponent: () =>
+      import('./Pages/encuesta/encuesta').then(m => m.Encuesta),
   },
   {
     path: 'login',

@@ -1,0 +1,96 @@
+
+<main class="verify-page">
+
+  <a routerLink="/home" class="verify-brand">
+    <img src="assets/logo_bloom.png" alt="Bloom, ir al inicio">
+  </a>
+
+  <section class="verify-card" aria-labelledby="verify-title">
+
+    <div class="verify-decoration" aria-hidden="true">✿</div>
+
+    <h1 id="verify-title" class="verify-title">¡Un paso más!</h1>
+    <p class="verify-subtitle">Queremos asegurarnos de que eres tú ♡</p>
+
+    <div class="verify-message">
+      <span class="verify-icon" aria-hidden="true">✉</span>
+
+      <p>
+        Hemos enviado un código de verificación a:
+      </p>
+
+      <strong>{{ email() }}</strong>
+    </div>
+
+    <form (submit)="$event.preventDefault(); onSubmit()" novalidate>
+
+      <div class="verify-field" [class.invalid]="error()">
+
+        <label for="code">Código de verificación</label>
+
+        <input
+          id="code"
+          type="text"
+          [formControl]="code"
+          autocomplete="one-time-code"
+          placeholder="Ej. A1B2C3D"
+          maxlength="7"
+          autocapitalize="characters"
+          spellcheck="false"
+          [attr.aria-invalid]="error() ? 'true' : null"
+        >
+
+        @if (error()) {
+          <span class="verify-error">
+            {{ error() }}
+          </span>
+        }
+
+      </div>
+
+      @if (serverError()) {
+        <p class="verify-alert" role="alert">
+          {{ serverError() }}
+        </p>
+      }
+
+      <button
+        class="verify-submit"
+        type="submit"
+        [disabled]="sending()"
+      >
+        {{ sending() ? 'Verificando...' : 'Verificar cuenta ♡' }}
+      </button>
+
+    </form>
+
+    <div class="verify-resend">
+
+      <p>¿No recibiste el código?</p>
+
+      <button
+        type="button"
+        class="verify-resend-button"
+        [disabled]="cooldown() > 0"
+        (click)="resend()"
+      >
+        @if (cooldown() > 0) {
+          Reenviar código en {{ cooldown() }} s
+        } @else {
+          Reenviar código
+        }
+      </button>
+
+    </div>
+
+    <p class="verify-register">
+      ¿Te equivocaste de correo?
+      <a routerLink="/register">Volver al registro</a>
+    </p>
+
+  </section>
+
+  <span class="verify-flower flower-one" aria-hidden="true">✿</span>
+  <span class="verify-flower flower-two" aria-hidden="true">♡</span>
+
+</main>

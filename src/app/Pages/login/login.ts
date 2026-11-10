@@ -1,3 +1,4 @@
+
 import { Component, inject, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -13,14 +14,22 @@ export class Login {
   private readonly router = inject(Router);
 
   readonly submitted = signal(false);
+  readonly showPw = signal(false);
+  readonly loading = signal(false);
+  readonly errorMsg = signal('');
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required]],
   });
 
-  get email() { return this.form.controls.email; }
-  get password() { return this.form.controls.password; }
+  get email() {
+    return this.form.controls.email;
+  }
+
+  get password() {
+    return this.form.controls.password;
+  }
 
   showError(control: AbstractControl): boolean {
     return control.invalid && (control.touched || this.submitted());
@@ -28,10 +37,15 @@ export class Login {
 
   onSubmit(): void {
     this.submitted.set(true);
-    if (this.form.invalid) return;
+    this.errorMsg.set('');
 
-    // TODO: conectar con el servicio de autenticación cuando exista.
-    // Por ahora solo navega al Home para poder probar el flujo.
+    if (this.form.invalid) {
+      return;
+    }
+
+    this.loading.set(true);
+
+    // TODO: conectar con el servicio de autenticación.
     this.router.navigate(['/home']);
   }
 }
