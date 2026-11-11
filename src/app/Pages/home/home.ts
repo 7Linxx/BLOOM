@@ -1,6 +1,11 @@
 
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
+import { BloomApi } from '../../Core/Services/bloom-api.service';
+import { Sesion } from '../../Core/Services/sesion.service';
+import { CicloActual, DiaCalendario } from '../../Core/modelos';
+import { fechaATexto, indicadorATipoDia, textoAFecha } from '../../Core/mapeos';
 
 type DayKind = 'predicted' | 'confirmed' | 'fertile' | 'ovulation' | 'late' | 'none';
 
@@ -31,12 +36,19 @@ interface Article {
   styleUrl: './home.css',
 })
 export class Home {
+  private readonly api = inject(BloomApi);
+  private readonly sesion = inject(Sesion);
+
+  constructor() {
+    this.cargarDatos();
+  }
 
   // DATOS GENERALES
 
   readonly today = new Date();
 
-  apodo = signal('Luna');
+  // Apodo de la usuaria que inició sesión.
+  apodo = signal(this.sesion.usuaria()?.apodo ?? '');
 
   fechaLarga = new Intl.DateTimeFormat('es-CO', {
     weekday: 'long',
@@ -55,85 +67,75 @@ export class Home {
   });
 
 
-  // INFORMACIÓN DEL CICLO
+  // INFORMACIÓN DEL CICLO (GET /usuarias/{id}/ciclo-actual: el backend ya hace todos los cálculos)
 
-  cycleLength = signal(28);
-  periodLength = signal(5);
+  /** Ciclo actual que manda el backend (null si todavía no hay ciclos). */
+  cicloActual = signal<CicloActual | null>(null);
 
-  // Fecha de inicio de ejemplo: hace 12 días.
-  // Posteriormente se conectará con los datos reales de la usuaria.
-  lastPeriodStart = signal(this.addDays(this.today, -12));
+  cycleLength = computed(() => this.cicloActual()?.duracionEstimada ?? 28);
+  periodLength = computed(() => this.cicloActual()?.duracionEstimadaMenstruacion ?? 5);
 
-  cycleDay = computed(() => {
-    const difference = this.daysBetween(
-      this.lastPeriodStart(),
-      this.today,
-    );
+  /** Día del ciclo como número (para dibujar el círculo). */
+  private diaDelCiclo = computed(() => this.cicloActual()?.diaDelCiclo ?? 1);
 
-    return difference + 1;
+  /** Día del ciclo que se muestra ('—' si todavía no hay datos). */
+  cycleDay = computed(() => this.cicloActual() ? this.diaDelCiclo() : '—');
+
+  /** La ovulación la calcula el backend: aquí solo se pasa a "día del ciclo" para el círculo. */
+  ovulationDay = computed(() => {
+    const ciclo = this.cicloActual();
+    if (!ciclo) {
+      return this.cycleLength() - 14;
+    }
+    return this.daysBetween(textoAFecha(ciclo.fechaInicio), textoAFecha(ciclo.fechaEstimadaOvulacion)) + 1;
   });
 
-  ovulationDay = computed(() => this.cycleLength() - 14);
-
-  daysToNextPeriod = computed(() => {
-    return Math.max(0, this.cycleLength() - this.cycleDay());
-  });
-
-  periodoRetrasado = computed(() => {
-    return this.cycleDay() > this.cycleLength();
-  });
+  periodoRetrasado = computed(() => this.cicloActual()?.periodoRetrasado ?? false);
 
   nextPeriod = computed(() => {
-    const date = this.addDays(
-      this.lastPeriodStart(),
-      this.cycleLength(),
-    );
-
-    return this.formatDate(date);
+    const ciclo = this.cicloActual();
+    return ciclo ? this.formatDate(textoAFecha(ciclo.fechaEstimadaSiguientePeriodo)) : 'Sin datos';
   });
 
   nextOvulation = computed(() => {
-    const date = this.addDays(
-      this.lastPeriodStart(),
-      this.ovulationDay() - 1,
-    );
-
-    return this.formatDate(date);
+    const ciclo = this.cicloActual();
+    return ciclo ? this.formatDate(textoAFecha(ciclo.fechaEstimadaOvulacion)) : 'Sin datos';
   });
 
+  /** Fase que calcula el backend: MENSTRUAL, FOLICULAR, OVULATORIA o LUTEA. */
   phase = computed(() => {
-    const day = this.cycleDay();
-    const ovulation = this.ovulationDay();
-
-    if (day <= this.periodLength()) {
-      return {
-        name: 'Fase menstrual',
-        tone: 'menstrual',
-        msg: 'Un momento para descansar y escucharte.',
-      };
+    switch (this.cicloActual()?.fase) {
+      case 'MENSTRUAL':
+        return {
+          name: 'Fase menstrual',
+          tone: 'menstrual',
+          msg: 'Un momento para descansar y escucharte.',
+        };
+      case 'FOLICULAR':
+        return {
+          name: 'Fase folicular',
+          tone: 'follicular',
+          msg: 'Una etapa de renovación y energía.',
+        };
+      case 'OVULATORIA':
+        return {
+          name: 'Ventana fértil estimada',
+          tone: 'fertile',
+          msg: 'Tu cuerpo se acerca a la ovulación.',
+        };
+      case 'LUTEA':
+        return {
+          name: 'Fase lútea',
+          tone: 'luteal',
+          msg: 'Un momento para priorizar tu bienestar.',
+        };
+      default:
+        return {
+          name: 'Sin datos del ciclo',
+          tone: 'follicular',
+          msg: 'Registra tu menstruación para empezar a ver tu ciclo.',
+        };
     }
-
-    if (day < ovulation - 5) {
-      return {
-        name: 'Fase folicular',
-        tone: 'follicular',
-        msg: 'Una etapa de renovación y energía.',
-      };
-    }
-
-    if (day <= ovulation + 1) {
-      return {
-        name: 'Ventana fértil estimada',
-        tone: 'fertile',
-        msg: 'Tu cuerpo se acerca a la ovulación.',
-      };
-    }
-
-    return {
-      name: 'Fase lútea',
-      tone: 'luteal',
-      msg: 'Un momento para priorizar tu bienestar.',
-    };
   });
 
 
@@ -153,7 +155,7 @@ export class Home {
 
   marker = computed(() => {
     const angle =
-      ((this.cycleDay() - 1) / this.cycleLength()) *
+      ((this.diaDelCiclo() - 1) / this.cycleLength()) *
       2 * Math.PI - Math.PI / 2;
 
     return {
@@ -201,7 +203,10 @@ export class Home {
   }
 
 
-  // RESUMEN DE LA SEMANA
+  // RESUMEN DE LA SEMANA (indicadores de GET /usuarias/{id}/calendario)
+
+  /** Días del calendario del backend, por fecha 'AAAA-MM-DD'. */
+  diasCalendario = signal<Record<string, DiaCalendario>>({});
 
   week = computed<WeekDay[]>(() => {
     const currentDate = this.stripTime(this.today);
@@ -216,101 +221,130 @@ export class Home {
       const date = this.addDays(firstDay, index);
       const isToday = this.sameDay(date, currentDate);
 
+      const dia = this.diasCalendario()[fechaATexto(date)];
+
       return {
         label,
         num: date.getDate(),
-        kind: this.kindFor(date),
+        kind: indicadorATipoDia(dia?.indicador) as DayKind,
         isToday,
         isFuture: date > currentDate,
-        hasNote: index === 1 || index === 4,
+        hasNote: dia?.tieneRegistro ?? false,
       };
     });
   });
 
-  private kindFor(date: Date): DayKind {
-    const day = this.daysBetween(this.lastPeriodStart(), date) + 1;
 
-    if (day < 1 || day > this.cycleLength()) {
-      return 'none';
-    }
-
-    if (day <= this.periodLength()) {
-      return 'confirmed';
-    }
-
-    if (day === this.ovulationDay()) {
-      return 'ovulation';
-    }
-
-    if (
-      day >= this.ovulationDay() - 5 &&
-      day < this.ovulationDay()
-    ) {
-      return 'fertile';
-    }
-
-    if (day > this.cycleLength() - this.periodLength()) {
-      return 'predicted';
-    }
-
-    return 'none';
-  }
-
-
-  // ESTADÍSTICAS DE EJEMPLO
+  // ESTADÍSTICAS (GET /usuarias/{id}/estadisticas, viene de MongoDB)
 
   stats = signal([
     {
       icon: '🌸',
       label: 'Duración promedio del ciclo',
-      value: '28',
+      value: '—',
       unit: 'días',
     },
     {
       icon: '🩸',
       label: 'Duración promedio del periodo',
-      value: '5',
+      value: '—',
       unit: 'días',
     },
     {
       icon: '📅',
       label: 'Ciclos registrados',
-      value: '3',
+      value: '—',
       unit: 'ciclos',
     },
   ]);
 
-  sintomaFrecuente = signal('Cólic​os');
+  sintomaFrecuente = signal('Todavía no hay información');
 
 
-  // ARTÍCULOS DE EJEMPLO
+  // ARTÍCULOS (GET /articulos: se muestran los 3 primeros)
 
-  articles = signal<Article[]>([
-    {
-      id: 1,
-      titulo: 'Conoce las fases de tu ciclo menstrual',
-      resumen: 'Descubre qué sucede en tu cuerpo durante cada etapa del ciclo.',
-      categoria: 'Ciclo menstrual',
-      enlace: '/articulos',
-      tono: 'rose',
-    },
-    {
-      id: 2,
-      titulo: 'La importancia de escuchar tu cuerpo',
-      resumen: 'Aprende a reconocer tus emociones y necesidades.',
-      categoria: 'Bienestar emocional',
-      enlace: '/articulos',
-      tono: 'lilac',
-    },
-    {
-      id: 3,
-      titulo: 'Pequeños hábitos para cuidarte',
-      resumen: 'Ideas sencillas para incorporar el autocuidado a tu rutina.',
-      categoria: 'Autocuidado',
-      enlace: '/articulos',
-      tono: 'butter',
-    },
-  ]);
+  articles = signal<Article[]>([]);
+
+
+  // CARGA DE DATOS DEL BACKEND
+
+  /**
+   * Pide al backend todo lo que muestra el home. Cada parte se pide por separado:
+   * si una falla (por ejemplo, MongoDB apagado), las demás se siguen mostrando.
+   */
+  private cargarDatos(): void {
+    const usuaria = this.sesion.usuaria();
+    if (!usuaria) {
+      return;
+    }
+    const id = usuaria.idUsuario;
+
+    this.api.verCicloActual(id)
+      .then(ciclo => this.cicloActual.set(ciclo))
+      .catch(() => this.cicloActual.set(null));
+
+    // La semana puede tocar dos meses: se pide el calendario de cada mes que aparezca.
+    const lunes = this.addDays(this.stripTime(this.today), -((this.today.getDay() + 6) % 7));
+    const domingo = this.addDays(lunes, 6);
+    const meses = [lunes];
+    if (domingo.getMonth() !== lunes.getMonth()) {
+      meses.push(domingo);
+    }
+    for (const fecha of meses) {
+      this.api.verCalendario(id, fecha.getFullYear(), fecha.getMonth() + 1)
+        .then(calendario => {
+          const dias = { ...this.diasCalendario() };
+          for (const dia of calendario.dias) {
+            dias[dia.fecha] = dia;
+          }
+          this.diasCalendario.set(dias);
+        })
+        .catch(() => undefined);
+    }
+
+    this.api.verEstadisticas(id)
+      .then(estadistica => {
+        this.stats.set([
+          {
+            icon: '🌸',
+            label: 'Duración promedio del ciclo',
+            value: estadistica.promedioDuracionCiclo !== null ? String(Math.round(estadistica.promedioDuracionCiclo)) : '—',
+            unit: 'días',
+          },
+          {
+            icon: '🩸',
+            label: 'Duración promedio del periodo',
+            value: estadistica.promedioDuracionPeriodo !== null ? String(Math.round(estadistica.promedioDuracionPeriodo)) : '—',
+            unit: 'días',
+          },
+          {
+            icon: '📅',
+            label: 'Ciclos registrados',
+            value: String(estadistica.totalCiclos ?? 0),
+            unit: 'ciclos',
+          },
+        ]);
+        if (estadistica.sintomasFrecuentes?.length > 0) {
+          this.sintomaFrecuente.set(estadistica.sintomasFrecuentes[0].nombre);
+        }
+      })
+      .catch(() => undefined);
+
+    const tonos: Article['tono'][] = ['rose', 'lilac', 'butter'];
+    this.api.verArticulos()
+      .then(articulos => {
+        this.articles.set(articulos.slice(0, 3).map((articulo, indice) => ({
+          id: indice + 1,
+          titulo: articulo.titulo,
+          resumen: articulo.resumen,
+          categoria: articulo.categoria,
+          imagen: articulo.urlImagen ?? undefined,
+          enlace: '/articulos',
+          tono: tonos[indice % tonos.length],
+        })));
+      })
+      .catch(() => undefined);
+  }
 
 
   // FUNCIONES AUXILIARES

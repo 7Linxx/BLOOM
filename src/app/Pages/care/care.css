@@ -1,4 +1,3 @@
-
 /* =====================================================
    BLOOM CARE — ESTILO CÁLIDO, FLORAL Y ALEGRE
 ===================================================== */
@@ -490,78 +489,6 @@
   cursor: pointer;
 }
 
-/* ESTADO DE ÁNIMO */
-
-.mood-options {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 13px;
-  width: 100%;
-}
-
-.mood-option {
-  display: flex;
-  flex: 1 1 100px;
-  flex-direction: column;
-  align-items: center;
-  gap: 9px;
-  max-width: 160px;
-  min-height: 120px;
-  padding: 16px 10px;
-
-  color: var(--c-text-soft);
-  background: rgba(255, 255, 255, 0.8);
-  border: 1.5px solid #f4dce3;
-  border-radius: 19px;
-
-  font-family: var(--font-body);
-  cursor: pointer;
-
-  box-shadow: 0 4px 10px rgba(168, 62, 96, 0.04);
-  transition: transform var(--t-med), border var(--t-med), background var(--t-med), box-shadow var(--t-med);
-}
-
-.mood-option:hover:not(:disabled) {
-  transform: translateY(-5px) rotate(-1deg);
-  border-color: #e9c65f;
-  background: #fff9e6;
-  box-shadow: 0 7px 15px rgba(230, 185, 77, 0.15);
-}
-
-.mood-option.active {
-  color: var(--c-crimson);
-  background: #fff0b8;
-  border: 2px solid #e8bd55;
-  box-shadow: 0 5px 14px rgba(230, 185, 77, 0.2);
-  transform: translateY(-3px);
-}
-
-.mood-option > span {
-  font-size: 31px;
-  transition: transform var(--t-med);
-}
-
-.mood-option:hover > span,
-.mood-option.active > span {
-  transform: scale(1.15);
-}
-
-.mood-option strong {
-  font-family: var(--font-display);
-  font-size: 13px;
-}
-
-.mood-option small {
-  color: var(--c-text-soft);
-  font-size: 10px;
-}
-
-.mood-option:disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
-}
-
 /* CAMPOS DE FORMULARIO */
 
 .field-group {
@@ -571,9 +498,7 @@
   margin-top: 20px;
 }
 
-.field-group select,
-.field-group textarea,
-.input-with-unit input {
+.field-group textarea {
   width: 100%;
   padding: 12px 14px;
 
@@ -589,9 +514,7 @@
   transition: border var(--t-med), box-shadow var(--t-med);
 }
 
-.field-group select:focus,
-.field-group textarea:focus,
-.input-with-unit input:focus {
+.field-group textarea:focus {
   border-color: #e9c65f;
   box-shadow: 0 0 0 3px rgba(255, 240, 184, 0.55);
 }
@@ -602,8 +525,7 @@
   line-height: 1.7;
 }
 
-.field-group textarea::placeholder,
-.input-with-unit input::placeholder {
+.field-group textarea::placeholder {
   color: #b8a3a9;
 }
 
@@ -613,37 +535,9 @@
   line-height: 1.5;
 }
 
-.field-group :disabled,
-.input-with-unit input:disabled {
+.field-group :disabled {
   cursor: not-allowed;
   opacity: 0.65;
-}
-
-/* MEDICIONES */
-
-.measurements-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-}
-
-.input-with-unit {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.input-with-unit input {
-  padding-right: 45px;
-}
-
-.input-with-unit span {
-  position: absolute;
-  right: 14px;
-  color: var(--c-text-soft);
-  font-size: 12px;
-  font-weight: 800;
-  pointer-events: none;
 }
 
 /* BOTONES DE ACCIÓN */
@@ -941,24 +835,6 @@
     grid-template-columns: 1fr;
   }
 
-  .measurements-grid {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-
-  .mood-options {
-    gap: 8px;
-  }
-
-  .mood-option {
-    min-height: 105px;
-    padding: 12px 5px;
-  }
-
-  .mood-option small {
-    font-size: 9px;
-  }
-
   .form-actions {
     flex-direction: column;
   }
@@ -993,9 +869,6 @@
     height: 40px;
   }
 
-  .mood-option {
-    flex-basis: 85px;
-  }
 }
 
 /* ACCESIBILIDAD */

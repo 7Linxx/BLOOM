@@ -11,7 +11,6 @@ import { Router, RouterLink } from '@angular/router';
 
 import {
   CycleMode,
-  MenstrualFlow,
   Registration,
   SurveyData
 } from '../../Core/registration';
@@ -22,6 +21,7 @@ import {
   notTooOld,
   todayIso,
 } from '../../Core/validators';
+import { mensajeDeError } from '../../Core/Services/bloom-api.service';
 
 const MAX_CYCLES = 3;
 
@@ -30,6 +30,9 @@ const CYCLE_NAMES = [
   'Menstruación anterior',
   'Tercera menstruación',
 ];
+
+/** Las dos opciones que acepta el backend (ingresoRango): duraciones o fechas de 1 a 3 menstruaciones. */
+type CycleOption = 'duraciones' | 'fechas';
 
 @Component({
   selector: 'app-encuesta',
@@ -50,85 +53,57 @@ export class Encuesta {
   readonly sending = signal(false);
   readonly serverError = signal<string | null>(null);
 
-  readonly sintomasDisponibles = [
-    'Cólicos',
-    'Dolor de cabeza',
-    'Dolor de espalda',
-    'Sensibilidad en los senos',
-    'Hinchazón',
-    'Acné',
-    'Cansancio',
-    'Cambios de humor',
-    'Ansiedad',
-    'Antojos',
-    'Náuseas',
-    'Dolor muscular',
-    'Ninguno',
-  ];
-
-  readonly tiposFlujo: {
-    value: MenstrualFlow;
+  readonly opcionesCiclo: {
+    value: CycleOption;
     label: string;
     description: string;
   }[] = [
     {
-      value: 'ligero',
-      label: 'Ligero',
-      description: 'Poca cantidad de sangrado.',
+      value: 'duraciones',
+      label: 'Sé cuánto duran',
+      description: 'Te pediremos la duración de tu ciclo y de tu menstruación.',
     },
     {
-      value: 'moderado',
-      label: 'Moderado',
-      description: 'Una cantidad intermedia.',
-    },
-    {
-      value: 'abundante',
-      label: 'Abundante',
-      description: 'Una cantidad elevada.',
-    },
-    {
-      value: 'variable',
-      label: 'Variable',
-      description: 'Cambia durante el periodo.',
-    },
-    {
-      value: 'no_se',
-      label: 'No lo sé',
-      description: 'No estoy segura.',
+      value: 'fechas',
+      label: 'Recuerdo las fechas',
+      description: 'Te pediremos las fechas de tus últimas menstruaciones (de 1 a 3).',
     },
   ];
 
   readonly form = this.fb.group({
+    // Altura, peso y horas de sueño son obligatorios en el backend.
     altura: this.fb.control<number | null>(
       null,
-      [Validators.min(100), Validators.max(230)],
+      [Validators.required, Validators.min(100), Validators.max(230)],
     ),
 
     peso: this.fb.control<number | null>(
       null,
-      [Validators.min(30), Validators.max(250)],
+      [Validators.required, Validators.min(30), Validators.max(250)],
     ),
 
     sueno: this.fb.control<number | null>(
       null,
-      [Validators.min(1), Validators.max(16)],
+      [Validators.required, Validators.min(1), Validators.max(16)],
     ),
 
+    // Opción elegida: se envía al backend como ingresoRango.
+    modo: this.fb.control<CycleOption | null>(null, [Validators.required]),
+
+    // Solo se usan (y se validan) cuando la opción es "duraciones".
     duracionCiclo: this.fb.control<number | null>(
       null,
-      [Validators.min(15), Validators.max(60)],
+      [Validators.required, Validators.min(15), Validators.max(60)],
     ),
 
+    // El backend acepta hasta 15 días de menstruación.
     duracionPeriodo: this.fb.control<number | null>(
       null,
-      [Validators.min(1), Validators.max(14)],
+      [Validators.required, Validators.min(1), Validators.max(15)],
     ),
 
+    // Solo se usan (y se validan) cuando la opción es "fechas".
     ciclos: this.fb.array([this.newCycle()]),
-
-    sintomas: this.fb.nonNullable.control<string[]>([]),
-
-    flujoMenstrual: this.fb.control<MenstrualFlow | null>(null),
   });
 
   constructor() {
@@ -137,9 +112,20 @@ export class Encuesta {
       return;
     }
 
+    // Al empezar no hay opción elegida: los campos de las dos opciones están desactivados.
+    this.aplicarModo(null);
+
+    this.form.controls.modo.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(modo => this.aplicarModo(modo));
+
     this.destroyRef.onDestroy(() => {
       this.form.reset();
     });
+  }
+
+  get modo(): CycleOption | null {
+    return this.form.controls.modo.value;
   }
 
   get ciclos(): FormArray {
@@ -162,25 +148,14 @@ export class Encuesta {
     }
   }
 
-  isSymptomSelected(symptom: string): boolean {
-    return this.form.controls.sintomas.value.includes(symptom);
-  }
+  get modoError(): string | null {
+    const control = this.form.controls.modo;
 
-  toggleSymptom(symptom: string, checked: boolean): void {
-    const control = this.form.controls.sintomas;
-    const current = control.value;
-
-    if (symptom === 'Ninguno') {
-      control.setValue(checked ? ['Ninguno'] : []);
-      return;
+    if (!(control.touched || this.submitted()) || !control.hasError('required')) {
+      return null;
     }
 
-    const updated = checked
-      ? [...current.filter(item => item !== 'Ninguno'), symptom]
-      : current.filter(item => item !== symptom);
-
-    control.setValue(updated);
-    control.markAsTouched();
+    return 'Elige una opción para continuar.';
   }
 
   get alturaError(): string | null {
@@ -189,6 +164,7 @@ export class Encuesta {
       100,
       230,
       'cm',
+      'Escribe tu altura en centímetros.',
     );
   }
 
@@ -198,6 +174,7 @@ export class Encuesta {
       30,
       250,
       'kg',
+      'Escribe tu peso en kilogramos.',
     );
   }
 
@@ -207,6 +184,7 @@ export class Encuesta {
       1,
       16,
       'horas',
+      'Escribe cuántas horas duermes.',
     );
   }
 
@@ -216,6 +194,7 @@ export class Encuesta {
       15,
       60,
       'días',
+      'Escribe cuántos días dura tu ciclo.',
     );
   }
 
@@ -223,8 +202,9 @@ export class Encuesta {
     return this.numberError(
       this.form.controls.duracionPeriodo,
       1,
-      14,
+      15,
       'días',
+      'Escribe cuántos días dura tu menstruación.',
     );
   }
 
@@ -233,9 +213,14 @@ export class Encuesta {
     min: number,
     max: number,
     unit: string,
+    requiredMessage: string,
   ): string | null {
     if (!(control.touched || this.submitted()) || !control.errors) {
       return null;
+    }
+
+    if (control.hasError('required')) {
+      return requiredMessage;
     }
 
     if (control.hasError('min') || control.hasError('max')) {
@@ -251,6 +236,12 @@ export class Encuesta {
 
     if (!control || !(control.touched || this.submitted())) {
       return null;
+    }
+
+    if (control.hasError('required')) {
+      return field === 'inicio'
+        ? 'Indica la fecha de inicio.'
+        : 'Indica la fecha de finalización.';
     }
 
     if (control.hasError('future')) {
@@ -283,20 +274,58 @@ export class Encuesta {
     try {
       await this.registration.saveSurvey(this.buildPayload());
       await this.router.navigate(['/home']);
-    } catch {
+    } catch (error) {
+      // El backend explica qué falta o qué está mal.
       this.serverError.set(
-        'No pudimos guardar tus respuestas. Inténtalo de nuevo.',
+        this.traducirError(
+          mensajeDeError(error, 'No pudimos guardar tus respuestas. Inténtalo de nuevo.'),
+        ),
       );
     } finally {
       this.sending.set(false);
     }
   }
 
+  /**
+   * Activa solo los campos de la opción elegida. Los campos desactivados no se validan,
+   * así que no estorban aunque la usuaria cambie de opción.
+   */
+  private aplicarModo(modo: CycleOption | null): void {
+    const { duracionCiclo, duracionPeriodo } = this.form.controls;
+
+    if (modo === 'duraciones') {
+      duracionCiclo.enable();
+      duracionPeriodo.enable();
+      this.ciclos.disable();
+    } else if (modo === 'fechas') {
+      duracionCiclo.disable();
+      duracionPeriodo.disable();
+      this.ciclos.enable();
+    } else {
+      duracionCiclo.disable();
+      duracionPeriodo.disable();
+      this.ciclos.disable();
+    }
+  }
+
+  /**
+   * El backend guarda la altura en metros y a veces lo dice en su mensaje,
+   * pero en pantalla se pide en centímetros: se cambia por un mensaje claro.
+   */
+  private traducirError(mensaje: string): string {
+    if (/altura/i.test(mensaje) && /metro/i.test(mensaje)) {
+      return 'Revisa tu altura: escríbela en centímetros, entre 100 y 230 cm.';
+    }
+
+    return mensaje;
+  }
+
   private newCycle() {
     return this.fb.group(
       {
-        inicio: this.fb.nonNullable.control('', [notFuture, notTooOld]),
-        fin: this.fb.nonNullable.control('', [notFuture, notTooOld]),
+        // El backend necesita las dos fechas de cada menstruación.
+        inicio: this.fb.nonNullable.control('', [Validators.required, notFuture, notTooOld]),
+        fin: this.fb.nonNullable.control('', [Validators.required, notFuture, notTooOld]),
       },
       {
         validators: endNotBeforeStart,
@@ -310,32 +339,12 @@ export class Encuesta {
       ?.focus();
   }
 
-
   private buildPayload(): SurveyData {
     const v = this.form.getRawValue();
 
-    const cycles = v.ciclos
-      .filter(cycle => !!cycle.inicio)
-      .map(cycle => ({
-        inicio: cycle.inicio,
-        fin: cycle.fin || null,
-      }));
-
-    const hasDurations =
-      v.duracionCiclo !== null ||
-      v.duracionPeriodo !== null;
-
-    const hasDates = cycles.length > 0;
-
-    let mode: CycleMode = 'ninguno';
-
-    if (hasDurations && hasDates) {
-      mode = 'ambos';
-    } else if (hasDurations) {
-      mode = 'duraciones';
-    } else if (hasDates) {
-      mode = 'fechas';
-    }
+    // Ya validado: siempre hay una opción elegida.
+    const mode: CycleMode = v.modo ?? 'duraciones';
+    const usaDuraciones = mode === 'duraciones';
 
     return {
       alturaCm: v.altura,
@@ -343,14 +352,19 @@ export class Encuesta {
       horasSueno: v.sueno,
 
       modoCiclo: mode,
-      duracionCiclo: hasDurations ? v.duracionCiclo : null,
-      duracionPeriodo: hasDurations ? v.duracionPeriodo : null,
+      duracionCiclo: usaDuraciones ? v.duracionCiclo : null,
+      duracionPeriodo: usaDuraciones ? v.duracionPeriodo : null,
 
-      ciclos: cycles,
+      ciclos: usaDuraciones
+        ? []
+        : v.ciclos.map(cycle => ({
+          inicio: cycle.inicio,
+          fin: cycle.fin,
+        })),
 
-      sintomas: v.sintomas,
-      flujoMenstrual: v.flujoMenstrual,
+      // La encuesta del backend no guarda síntomas ni flujo.
+      sintomas: [],
+      flujoMenstrual: null,
     };
   }
-
 }

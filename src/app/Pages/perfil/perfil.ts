@@ -1,7 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CycleService } from '../../Core/Services/cycle.service';
+import { Router } from '@angular/router';
+
+import { BloomApi, mensajeDeError } from '../../Core/Services/bloom-api.service';
+import { Sesion } from '../../Core/Services/sesion.service';
+import { Usuaria } from '../../Core/modelos';
 
 interface UserProfile {
   primerNombre: string;
@@ -15,15 +19,26 @@ interface UserProfile {
   alturaCm: number | null;
 }
 
+/** Valores del ciclo y del sueño que se guardan en Ajustes del backend. */
+interface CycleSettings {
+  horasSueno: number | null;
+  duracionCiclo: number | null;
+  duracionMenstruacion: number | null;
+}
+
 interface PrivacyPreferences {
   flow: boolean;
   symptoms: boolean;
+  emotions: boolean;
   sexualActivity: boolean;
   notes: boolean;
-  mood: boolean;
-  temperature: boolean;
   weight: boolean;
-  contraceptiveMethod: boolean;
+}
+
+/** Mensaje de confirmación o error que se muestra dentro de una tarjeta. */
+interface FormMessage {
+  tipo: 'ok' | 'error';
+  texto: string;
 }
 
 @Component({
@@ -34,23 +49,41 @@ interface PrivacyPreferences {
   styleUrl: './perfil.css'
 })
 export class Perfil {
-  private readonly cycleService = inject(CycleService);
+  private readonly api = inject(BloomApi);
+  private readonly sesion = inject(Sesion);
+  private readonly router = inject(Router);
 
-  private readonly profileKey = 'bloom_user_profile';
+  // Las preferencias de privacidad NO existen en el backend: se siguen guardando solo en este navegador.
   private readonly privacyKey = 'bloom_privacy_preferences';
+
+  /** Datos tal como están en el backend (para "Cancelar"). */
+  private original: UserProfile = this.emptyProfile();
+
+  /** Duración fija del ciclo guardada en ajustes (solo se usa con el método MANUAL). */
+  private duracionFija: number | null = null;
+
+  /** Promedio real de los ciclos (estadísticas) o, si no hay, la duración estimada del ciclo actual. */
+  private duracionEstimada: number | null = null;
 
   profile: UserProfile = this.emptyProfile();
 
-  privacy: PrivacyPreferences = {
-    flow: false,
-    symptoms: false,
-    sexualActivity: false,
-    notes: false,
-    mood: false,
-    temperature: false,
-    weight: false,
-    contraceptiveMethod: false
-  };
+  /** Sueño y duraciones fijas (Ajustes del backend). */
+  cycleSettings: CycleSettings = this.emptyCycleSettings();
+  private originalCycleSettings: CycleSettings = this.emptyCycleSettings();
+  cycleSettingsMessage: FormMessage | null = null;
+
+  privacy: PrivacyPreferences = this.emptyPrivacy();
+
+  /** Cambio de contraseña. */
+  passwordForm = { actual: '', nueva: '', confirmar: '' };
+  passwordMessage: FormMessage | null = null;
+  changingPassword = false;
+
+  /** Eliminar cuenta (dos pasos: pedir confirmación y escribir ELIMINAR). */
+  deleteStep: 'closed' | 'confirm' = 'closed';
+  deleteText = '';
+  deleteMessage: FormMessage | null = null;
+  deletingAccount = false;
 
   useFixedCycleRanges = false;
   settingsExpanded = false;
@@ -61,7 +94,6 @@ export class Perfil {
   constructor() {
     this.loadProfile();
     this.loadPrivacy();
-    this.useFixedCycleRanges = this.cycleService.useFixedCycleRanges();
   }
 
   get displayName(): string {
@@ -117,20 +149,22 @@ export class Perfil {
     return age;
   }
 
-  get fixedCycleLength(): number {
-    return this.cycleService.cycleLength();
+  get fixedCycleLength(): number | string {
+    return this.duracionFija ?? '—';
   }
 
-  get estimatedCycleLength(): number {
-    return this.cycleService.getEstimatedCycleLength(
-      this.cycleService.getPeriodStarts()
-    );
+  get estimatedCycleLength(): number | string {
+    return this.duracionEstimada ?? '—';
   }
 
   get predictionDescription(): string {
     return this.useFixedCycleRanges
       ? 'BLOOM utilizará la duración fija configurada en tu registro.'
       : 'BLOOM calculará la duración usando tus últimas menstruaciones registradas.';
+  }
+
+  get canDeleteAccount(): boolean {
+    return this.deleteText.trim().toUpperCase() === 'ELIMINAR' && !this.deletingAccount;
   }
 
   get privacyItems(): {
@@ -150,6 +184,11 @@ export class Perfil {
         description: 'Síntomas físicos y molestias que hayas registrado.'
       },
       {
+        key: 'emotions',
+        title: 'Emociones',
+        description: 'Emociones que hayas registrado en tu diario.'
+      },
+      {
         key: 'sexualActivity',
         title: 'Actividad sexual',
         description: 'Información sobre actividad sexual registrada.'
@@ -160,29 +199,18 @@ export class Perfil {
         description: 'Notas y observaciones de tu diario.'
       },
       {
-        key: 'mood',
-        title: 'Estado de ánimo',
-        description: 'Estados de ánimo registrados diariamente.'
-      },
-      {
-        key: 'temperature',
-        title: 'Temperatura',
-        description: 'Mediciones de temperatura que hayas guardado.'
-      },
-      {
         key: 'weight',
         title: 'Peso',
-        description: 'Datos de peso registrados en tu perfil o diario.'
-      },
-      {
-        key: 'contraceptiveMethod',
-        title: 'Método anticonceptivo',
-        description: 'Métodos anticonceptivos registrados.'
+        description: 'Dato de peso registrado en tu perfil.'
       }
     ];
   }
 
-  saveProfile(): void {
+  /**
+   * Guarda en el backend (PUT /usuarias/{id}/ajustes) lo que se puede cambiar: apodo, peso y altura.
+   * Nombres, apellidos, fecha de nacimiento y correo son de solo lectura (Ajustes no los tiene).
+   */
+  async saveProfile(): Promise<void> {
     this.errorMessage = '';
     this.savedMessage = '';
 
@@ -209,28 +237,20 @@ export class Perfil {
       return;
     }
 
-    if (
-      this.profile.fechaNacimiento &&
-      new Date(`${this.profile.fechaNacimiento}T00:00:00`) > new Date()
-    ) {
-      this.errorMessage = 'La fecha de nacimiento no puede ser futura.';
-      return;
-    }
-
     try {
-      localStorage.setItem(
-        this.profileKey,
-        JSON.stringify(this.profile)
-      );
+      await this.api.actualizarAjustes(this.sesion.idUsuario, {
+        apodo: nickname || null,
+        peso: this.profile.pesoKg,
+        // La altura se edita en cm y el backend la guarda en metros.
+        altura: this.profile.alturaCm !== null ? this.profile.alturaCm / 100 : null,
+      });
+      this.sesion.actualizar({ apodo: nickname || this.original.apodo });
 
-      if (this.profile.pesoKg !== null) {
-        this.cycleService.setInitialWeight(this.profile.pesoKg);
-      }
-
+      await this.loadProfile();
       this.savedMessage = 'Tu información se guardó correctamente. ♡';
       this.editing = false;
-    } catch {
-      this.errorMessage = 'No fue posible guardar los cambios.';
+    } catch (error) {
+      this.errorMessage = mensajeDeError(error, 'No fue posible guardar los cambios.');
     }
   }
 
@@ -241,25 +261,84 @@ export class Perfil {
   }
 
   cancelEditing(): void {
-    this.loadProfile();
+    this.profile = { ...this.original };
     this.editing = false;
     this.savedMessage = '';
     this.errorMessage = '';
   }
 
-  changePredictionPreference(value: boolean): void {
-    this.useFixedCycleRanges = value;
+  /**
+   * Guarda horas de sueño y duraciones fijas del ciclo y de la menstruación (PUT /usuarias/{id}/ajustes).
+   * ⚠ ajusta: se asumen los campos horasSueno, duracionCiclo y duracionMenstruacion de Ajustes.
+   */
+  async saveCycleSettings(): Promise<void> {
+    this.cycleSettingsMessage = null;
 
-    this.cycleService.setFixedCycleRanges(value);
+    const { horasSueno, duracionCiclo, duracionMenstruacion } = this.cycleSettings;
 
-    this.savedMessage = 'Tu preferencia de predicción se actualizó. ♡';
+    if (horasSueno !== null && (horasSueno < 0 || horasSueno > 24)) {
+      this.cycleSettingsMessage = { tipo: 'error', texto: 'Las horas de sueño deben estar entre 0 y 24.' };
+      return;
+    }
+
+    if (duracionCiclo !== null && (duracionCiclo < 15 || duracionCiclo > 60)) {
+      this.cycleSettingsMessage = { tipo: 'error', texto: 'La duración del ciclo debe estar entre 15 y 60 días.' };
+      return;
+    }
+
+    if (duracionMenstruacion !== null && (duracionMenstruacion < 1 || duracionMenstruacion > 15)) {
+      this.cycleSettingsMessage = { tipo: 'error', texto: 'La duración de la menstruación debe estar entre 1 y 15 días.' };
+      return;
+    }
+
+    try {
+      await this.api.actualizarAjustes(this.sesion.idUsuario, {
+        horasSueno,
+        duracionCiclo,
+        duracionMenstruacion
+      } as any);
+
+      this.originalCycleSettings = { ...this.cycleSettings };
+      this.duracionFija = duracionCiclo;
+      this.cycleSettingsMessage = { tipo: 'ok', texto: 'Tus datos del ciclo se guardaron. ♡' };
+    } catch (error) {
+      this.cycleSettingsMessage = {
+        tipo: 'error',
+        texto: mensajeDeError(error, 'No se pudieron guardar tus datos del ciclo.')
+      };
+    }
+  }
+
+  resetCycleSettings(): void {
+    this.cycleSettings = { ...this.originalCycleSettings };
+    this.cycleSettingsMessage = null;
+  }
+
+  /**
+   * Cambia el método de cálculo en el backend: fija = MANUAL, automática = AUTOMATICO (PUT /ajustes).
+   * Para MANUAL el backend exige que exista una duración de ciclo (de la encuesta o de ajustes).
+   */
+  async changePredictionPreference(value: boolean): Promise<void> {
+    this.savedMessage = '';
     this.errorMessage = '';
+    try {
+      await this.api.actualizarAjustes(this.sesion.idUsuario, {
+        metodoCalculo: value ? 'MANUAL' : 'AUTOMATICO',
+      });
+      this.useFixedCycleRanges = value;
+      this.sesion.actualizar({ metodoCalculo: value ? 'MANUAL' : 'AUTOMATICO' });
+      this.savedMessage = 'Tu preferencia de predicción se actualizó. ♡';
+    } catch (error) {
+      this.useFixedCycleRanges = !value;
+      this.errorMessage = mensajeDeError(error, 'No se pudo cambiar el método de predicción.');
+    }
   }
 
   toggleSettings(): void {
     this.settingsExpanded = !this.settingsExpanded;
   }
 
+  /** Estas preferencias solo se guardan en este navegador (no existen en el backend). */
   savePrivacyPreferences(): void {
     try {
       localStorage.setItem(
@@ -267,32 +346,160 @@ export class Perfil {
         JSON.stringify(this.privacy)
       );
 
-      this.savedMessage = 'Tus preferencias de privacidad se guardaron. ♡';
+      this.savedMessage = 'Tus preferencias de privacidad se guardaron en este navegador. ♡';
       this.errorMessage = '';
     } catch {
       this.errorMessage = 'No fue posible guardar tus preferencias.';
     }
   }
 
-  private loadProfile(): void {
-    if (typeof localStorage === 'undefined') {
+  /**
+   * Cambia la contraseña: PUT /usuarias/{id}/contrasenia.
+   * ⚠ ajusta: se asume cambiarContrasenia(idUsuario, contraseniaActual, contraseniaNueva) en BloomApi.
+   */
+  async changePassword(): Promise<void> {
+    this.passwordMessage = null;
+
+    const { actual, nueva, confirmar } = this.passwordForm;
+
+    if (!actual || !nueva || !confirmar) {
+      this.passwordMessage = { tipo: 'error', texto: 'Completa los tres campos.' };
       return;
     }
 
-    try {
-      const saved = localStorage.getItem(this.profileKey);
-
-      if (saved) {
-        this.profile = {
-          ...this.emptyProfile(),
-          ...JSON.parse(saved)
-        };
-      } else {
-        this.profile = this.emptyProfile();
-      }
-    } catch {
-      this.profile = this.emptyProfile();
+    if (nueva.length < 8) {
+      this.passwordMessage = { tipo: 'error', texto: 'La nueva contraseña debe tener al menos 8 caracteres.' };
+      return;
     }
+
+    if (nueva === actual) {
+      this.passwordMessage = { tipo: 'error', texto: 'La nueva contraseña debe ser diferente a la actual.' };
+      return;
+    }
+
+    if (nueva !== confirmar) {
+      this.passwordMessage = { tipo: 'error', texto: 'La confirmación no coincide con la nueva contraseña.' };
+      return;
+    }
+
+    this.changingPassword = true;
+
+    try {
+      await (this.api as any).cambiarContrasenia(this.sesion.idUsuario, actual, nueva);
+      this.passwordForm = { actual: '', nueva: '', confirmar: '' };
+      this.passwordMessage = { tipo: 'ok', texto: 'Tu contraseña se actualizó. ♡' };
+    } catch (error) {
+      this.passwordMessage = {
+        tipo: 'error',
+        texto: mensajeDeError(error, 'No se pudo cambiar tu contraseña.')
+      };
+    } finally {
+      this.changingPassword = false;
+    }
+  }
+
+  /**
+   * Cierra la sesión y vuelve al inicio.
+   * ⚠ ajusta: se asume Sesion.cerrar() y que '/' es la pantalla de ingreso.
+   */
+  logout(): void {
+    (this.sesion as any).cerrar();
+    this.router.navigate(['/']);
+  }
+
+  openDelete(): void {
+    this.deleteStep = 'confirm';
+    this.deleteText = '';
+    this.deleteMessage = null;
+  }
+
+  cancelDelete(): void {
+    this.deleteStep = 'closed';
+    this.deleteText = '';
+    this.deleteMessage = null;
+  }
+
+  /**
+   * Elimina la cuenta: DELETE /usuarias/{id}. Es definitivo.
+   * ⚠ ajusta: se asume eliminarUsuaria(idUsuario) en BloomApi.
+   */
+  async deleteAccount(): Promise<void> {
+    if (!this.canDeleteAccount) {
+      return;
+    }
+
+    this.deleteMessage = null;
+    this.deletingAccount = true;
+
+    try {
+      await (this.api as any).eliminarUsuaria(this.sesion.idUsuario);
+
+      try {
+        localStorage.removeItem(this.privacyKey);
+      } catch {
+        // si el navegador no deja borrar, no importa: la cuenta ya no existe
+      }
+
+      this.logout();
+    } catch (error) {
+      this.deleteMessage = {
+        tipo: 'error',
+        texto: mensajeDeError(error, 'No se pudo eliminar tu cuenta.')
+      };
+    } finally {
+      this.deletingAccount = false;
+    }
+  }
+
+  /** Carga los datos de la usuaria (GET /usuarias/{id}) y sus ajustes (GET /usuarias/{id}/ajustes). */
+  private async loadProfile(): Promise<void> {
+    try {
+      const idUsuario = this.sesion.idUsuario;
+      const usuaria = await this.api.verUsuaria(idUsuario);
+      this.original = this.aPerfil(usuaria);
+      this.profile = { ...this.original };
+
+      const ajustes: any = await this.api.verAjustes(idUsuario);
+      this.useFixedCycleRanges = ajustes.metodoCalculo === 'MANUAL';
+      this.duracionFija = ajustes.duracionCiclo;
+
+      this.originalCycleSettings = {
+        horasSueno: ajustes.horasSueno ?? null,
+        duracionCiclo: ajustes.duracionCiclo ?? null,
+        duracionMenstruacion: ajustes.duracionMenstruacion ?? null
+      };
+      this.cycleSettings = { ...this.originalCycleSettings };
+
+      // Duración "automática": promedio real de los ciclos (MongoDB) o, si no hay, la del ciclo actual.
+      try {
+        const estadistica = await this.api.verEstadisticas(idUsuario);
+        this.duracionEstimada = estadistica.promedioDuracionCiclo !== null
+          ? Math.round(estadistica.promedioDuracionCiclo)
+          : null;
+      } catch {
+        this.duracionEstimada = null;
+      }
+      if (this.duracionEstimada === null) {
+        this.duracionEstimada = (await this.api.verCicloActual(idUsuario))?.duracionEstimada ?? null;
+      }
+    } catch (error) {
+      this.errorMessage = mensajeDeError(error, 'No se pudo cargar tu información.');
+    }
+  }
+
+  /** UsuariaDTO del backend -> datos que muestra el HTML (altura de metros a cm). */
+  private aPerfil(usuaria: Usuaria): UserProfile {
+    return {
+      primerNombre: usuaria.primerNombre ?? '',
+      segundoNombre: usuaria.segundoNombre ?? '',
+      primerApellido: usuaria.primerApellido ?? '',
+      segundoApellido: usuaria.segundoApellido ?? '',
+      apodo: usuaria.apodo ?? '',
+      fechaNacimiento: usuaria.fechaNacimiento ?? '',
+      email: usuaria.correoElectronico ?? '',
+      pesoKg: usuaria.peso,
+      alturaCm: usuaria.altura !== null ? Math.round(usuaria.altura * 100) : null
+    };
   }
 
   private loadPrivacy(): void {
@@ -304,23 +511,40 @@ export class Perfil {
       const saved = localStorage.getItem(this.privacyKey);
 
       if (saved) {
-        this.privacy = {
-          ...this.privacy,
-          ...JSON.parse(saved)
-        };
+        const data = JSON.parse(saved);
+        const limpio = this.emptyPrivacy();
+
+        // Solo se toman las opciones que existen hoy (las viejas de ánimo, temperatura y anticonceptivo se ignoran).
+        for (const clave of Object.keys(limpio) as (keyof PrivacyPreferences)[]) {
+          if (typeof data[clave] === 'boolean') {
+            limpio[clave] = data[clave];
+          }
+        }
+
+        this.privacy = limpio;
       }
     } catch {
-      this.privacy = {
-        flow: false,
-        symptoms: false,
-        sexualActivity: false,
-        notes: false,
-        mood: false,
-        temperature: false,
-        weight: false,
-        contraceptiveMethod: false
-      };
+      this.privacy = this.emptyPrivacy();
     }
+  }
+
+  private emptyPrivacy(): PrivacyPreferences {
+    return {
+      flow: false,
+      symptoms: false,
+      emotions: false,
+      sexualActivity: false,
+      notes: false,
+      weight: false
+    };
+  }
+
+  private emptyCycleSettings(): CycleSettings {
+    return {
+      horasSueno: null,
+      duracionCiclo: null,
+      duracionMenstruacion: null
+    };
   }
 
   private emptyProfile(): UserProfile {

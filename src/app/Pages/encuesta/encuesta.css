@@ -318,7 +318,122 @@
   font-size: 14px;
 }
 
-/* ÚLTIMAS MENSTRUACIONES (mismo estilo que .password-rules) */
+/* SELECTOR DE OPCIÓN (duraciones / fechas) */
+
+.mode-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.mode-question {
+  margin: 0 0 2px;
+
+  color: var(--survey-label);
+  font-family: var(--font-display, 'Fredoka', sans-serif);
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.mode-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.option-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  min-width: 0;
+  min-height: 82px;
+  padding: 14px;
+
+  background: rgba(255, 255, 255, 0.6);
+  border: 2px solid transparent;
+  border-radius: 11px;
+  outline: 1.5px solid rgba(244, 120, 165, 0.35);
+  outline-offset: -1.5px;
+
+  color: var(--c-text, #4a1c2c);
+  font-size: 14px;
+  cursor: pointer;
+
+  transition: all 0.25s ease;
+}
+
+.option-card:hover {
+  background: #fff4f7;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(168, 62, 96, 0.1);
+}
+
+.option-card.selected {
+  background: rgba(255, 211, 224, 0.65);
+  border-color: #f478a5;
+  outline-color: transparent;
+}
+
+.option-card input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.option-card:focus-within {
+  outline: 3px solid rgba(244, 120, 165, 0.45);
+  outline-offset: 2px;
+}
+
+.mode-group.invalid .option-card {
+  outline-color: #e0436a;
+}
+
+.radio-indicator {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+
+  background: var(--c-white, #fff);
+  border: 2px solid #f478a5;
+  border-radius: 50%;
+
+  transition: all 0.2s ease;
+}
+
+.option-card input:checked + .radio-indicator {
+  border: 6px solid var(--survey-dark);
+}
+
+.option-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.option-content strong {
+  color: var(--survey-label);
+  font-family: var(--font-display, 'Fredoka', sans-serif);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.option-content small {
+  color: var(--c-text-soft, #8a5a6b);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+/* MENSTRUACIONES (mismo estilo que .password-rules) */
 
 .cycles {
   margin: 2px 0 19px;
@@ -360,19 +475,6 @@
   color: var(--c-text-soft, #8a5a6b);
   font-size: 12px;
   line-height: 1.45;
-}
-
-.optional-tag {
-  flex-shrink: 0;
-  padding: 5px 12px;
-
-  background: #fff6b0;
-  border: 2px solid #ffb3c6;
-  border-radius: 999px;
-
-  color: #d63a77;
-  font-size: 11px;
-  font-weight: 800;
 }
 
 .cycle-list {
@@ -460,133 +562,6 @@
 .add-cycle span {
   font-size: 18px;
   line-height: 1;
-}
-
-/* SÍNTOMAS Y FLUJO */
-
-.symptoms-grid,
-.flow-options {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 11px;
-  margin-bottom: 22px;
-}
-
-.choice-card,
-.flow-card {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  min-width: 0;
-  min-height: 50px;
-  padding: 11px 14px;
-
-  background: rgba(255, 255, 255, 0.6);
-  border: 2px solid transparent;
-  border-radius: 11px;
-  outline: 1.5px solid rgba(244, 120, 165, 0.35);
-  outline-offset: -1.5px;
-
-  color: var(--c-text, #4a1c2c);
-  font-size: 14px;
-  cursor: pointer;
-
-  transition: all 0.25s ease;
-}
-
-.choice-card:hover,
-.flow-card:hover {
-  background: #fff4f7;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 12px rgba(168, 62, 96, 0.1);
-}
-
-.choice-card.selected,
-.flow-card.selected {
-  background: rgba(255, 211, 224, 0.65);
-  border-color: #f478a5;
-  outline-color: transparent;
-}
-
-.choice-card input,
-.flow-card input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  opacity: 0;
-}
-
-.choice-card:focus-within,
-.flow-card:focus-within {
-  outline: 3px solid rgba(244, 120, 165, 0.45);
-  outline-offset: 2px;
-}
-
-.custom-checkbox,
-.radio-indicator {
-  display: grid;
-  flex-shrink: 0;
-  place-items: center;
-
-  width: 20px;
-  height: 20px;
-
-  background: var(--c-white, #fff);
-  border: 2px solid #f478a5;
-
-  transition: all 0.2s ease;
-}
-
-.custom-checkbox {
-  border-radius: 6px;
-}
-
-.symptom-choice input:checked + .custom-checkbox {
-  border-color: var(--survey-dark);
-  background: var(--survey-dark);
-}
-
-.symptom-choice input:checked + .custom-checkbox::after {
-  content: '✓';
-  color: #fff;
-  font-size: 13px;
-  font-weight: 900;
-}
-
-.flow-card {
-  align-items: flex-start;
-  min-height: 82px;
-  padding: 14px;
-}
-
-.radio-indicator {
-  margin-top: 2px;
-  border-radius: 50%;
-}
-
-.flow-card input:checked + .radio-indicator {
-  border: 6px solid var(--survey-dark);
-}
-
-.flow-content {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.flow-content strong {
-  color: var(--survey-label);
-  font-family: var(--font-display, 'Fredoka', sans-serif);
-  font-size: 16px;
-  font-weight: 500;
-}
-
-.flow-content small {
-  color: var(--c-text-soft, #8a5a6b);
-  font-size: 12px;
-  line-height: 1.45;
 }
 
 /* FINAL */
@@ -737,8 +712,7 @@
 
   .survey-grid,
   .cycle-grid,
-  .symptoms-grid,
-  .flow-options {
+  .mode-options {
     grid-template-columns: 1fr;
   }
 

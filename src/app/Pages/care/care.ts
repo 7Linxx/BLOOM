@@ -1,18 +1,34 @@
-
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {
-  CycleService,
-  DayRecord,
-  DailyMood
-} from '../../Core/Services/cycle.service';
 
-type MoodOption = 'general' | 'positivo' | 'negativo';
+import { BloomApi, mensajeDeError } from '../../Core/Services/bloom-api.service';
+import { Sesion } from '../../Core/Services/sesion.service';
+import { Catalogos, RegistroDiario } from '../../Core/modelos';
+import {
+  backendAIntensidad,
+  intensidadABackend,
+  nombresACatalogo,
+  registroANombres,
+} from '../../Core/mapeos';
+
+/** Lo que el historial muestra de cada día (armado con lo que manda el backend). */
+interface DayRecord {
+  isPeriod: boolean;
+  symptoms: string[];
+  emotions: string[];
+  sexualActivities: string[];
+  note: string;
+}
 
 interface SymptomGroup {
   title: string;
   symptoms: string[];
+}
+
+interface CatalogOption {
+  name: string;
+  emoji: string;
 }
 
 interface HistoryItem {
@@ -35,15 +51,16 @@ export class Care {
   isPeriod = false;
   flowIntensity = 0;
 
+  /** Intensidades que existen en el backend (la 5 "Muy abundante" no existe). */
   flowLevels = [
     { value: 0, label: 'Ninguno' },
     { value: 1, label: 'Muy ligero' },
     { value: 2, label: 'Ligero' },
     { value: 3, label: 'Moderado' },
-    { value: 4, label: 'Abundante' },
-    { value: 5, label: 'Muy abundante' }
+    { value: 4, label: 'Abundante' }
   ];
 
+  /** Síntomas del catálogo ("Estrés" no existe en el backend). */
   symptomGroups: SymptomGroup[] = [
     {
       title: 'Síntomas físicos',
@@ -63,10 +80,8 @@ export class Care {
       title: 'Síntomas emocionales',
       symptoms: [
         'Ansiedad',
-        'Estrés',
         'Irritabilidad',
         'Tristeza',
-        'Cambios de humor',
         'Dificultad para dormir'
       ]
     }
@@ -74,33 +89,47 @@ export class Care {
 
   selectedSymptoms: string[] = [];
 
-  mood: MoodOption | null = null;
-
-  sexualActivity: boolean | null = null;
-
-  contraceptiveMethod = '';
-
-  contraceptiveOptions = [
-    'Ninguno',
-    'Pastillas anticonceptivas',
-    'Inyección',
-    'Implante subdérmico',
-    'DIU hormonal',
-    'DIU de cobre',
-    'Parche anticonceptivo',
-    'Anillo vaginal',
-    'Preservativo',
-    'Otro'
+  /** Emociones del catálogo del backend. */
+  emotionOptions: CatalogOption[] = [
+    { name: 'Feliz', emoji: '😊' },
+    { name: 'Con energía', emoji: '⚡' },
+    { name: 'Tranquila', emoji: '😌' },
+    { name: 'Sensible', emoji: '🥹' },
+    { name: 'Cambios de humor', emoji: '🎭' },
+    { name: 'Triste', emoji: '😔' },
+    { name: 'Ansiosa', emoji: '😰' },
+    { name: 'Irritable', emoji: '😤' }
   ];
 
-  temperature: number | null = null;
-  weight: number | null = null;
+  selectedEmotions: string[] = [];
+
+  /** Actividades sexuales del catálogo del backend. */
+  sexualActivityOptions: CatalogOption[] = [
+    { name: 'Con protección', emoji: '🛡️' },
+    { name: 'Sin protección', emoji: '💞' },
+    { name: 'Masturbación', emoji: '🌸' }
+  ];
+
+  selectedSexualActivities: string[] = [];
+
   note = '';
 
   savedMessage = '';
 
-  constructor(public cycleService: CycleService) {
-    this.loadRecord(this.today);
+  private readonly api = inject(BloomApi);
+  private readonly sesion = inject(Sesion);
+
+  /** Días registrados que manda el backend (GET /registros-diarios), por fecha 'AAAA-MM-DD'. */
+  private registros: Record<string, RegistroDiario> = {};
+
+  /** Catálogos del backend (síntomas, emociones y actividades sexuales con su id). */
+  private catalogos: Catalogos | null = null;
+
+  /** Historial ya armado (se recalcula cada vez que se cargan los registros). */
+  history: HistoryItem[] = [];
+
+  constructor() {
+    this.cargarRegistros();
   }
 
   get selectedDateLabel(): string {
@@ -119,35 +148,96 @@ export class Care {
   }
 
   get hasRecord(): boolean {
-    return !!this.cycleService.records()[this.selectedDate];
+    return !!this.registros[this.selectedDate];
   }
 
-  get history(): HistoryItem[] {
-    return Object.entries(this.cycleService.records())
-      .filter(([date]) => date <= this.today)
-      .sort(([a], [b]) => b.localeCompare(a))
-      .map(([date, record]) => ({
-        date,
-        label: new Date(`${date}T12:00:00`).toLocaleDateString('es-CO', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric'
-        }),
-        record
-      }));
+  /** Todos los nombres de síntomas que muestra esta página. */
+  private get todosLosSintomas(): string[] {
+    const nombres: string[] = [];
+    for (const grupo of this.symptomGroups) {
+      nombres.push(...grupo.symptoms);
+    }
+    return nombres;
   }
 
-  get hasAnyInformation(): boolean {
-    return (
-      this.isPeriod ||
-      this.selectedSymptoms.length > 0 ||
-      this.mood !== null ||
-      this.sexualActivity !== null ||
-      this.contraceptiveMethod !== '' ||
-      this.temperature !== null ||
-      this.weight !== null ||
-      this.note.trim() !== ''
-    );
+  /** Quita tildes, mayúsculas y guiones bajos para comparar nombres del catálogo. */
+  private normalizar(texto: string): string {
+    return (texto ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/_/g, ' ')
+      .trim()
+      .toLowerCase();
+  }
+
+  /** Nombres de los elementos de una lista del backend (emociones / actividades), dejando solo los que muestra esta página. */
+  private nombresDe(lista: any[] | null | undefined, opciones: CatalogOption[]): string[] {
+    const guardados = (lista ?? []).map(item => this.normalizar(item?.nombre));
+    return opciones
+      .filter(opcion => guardados.includes(this.normalizar(opcion.name)))
+      .map(opcion => opcion.name);
+  }
+
+  /** Busca en una lista del catálogo los elementos que corresponden a los nombres elegidos. */
+  private traducir(
+    nombres: string[],
+    catalogo: any[] | null | undefined
+  ): { encontrados: any[]; noGuardados: string[] } {
+    const encontrados: any[] = [];
+    const noGuardados: string[] = [];
+
+    for (const nombre of nombres) {
+      const item = (catalogo ?? []).find(
+        elemento => this.normalizar(elemento?.nombre) === this.normalizar(nombre)
+      );
+      if (item) {
+        encontrados.push(item);
+      } else {
+        noGuardados.push(nombre);
+      }
+    }
+
+    return { encontrados, noGuardados };
+  }
+
+  /** Convierte un registro del backend en lo que muestra el historial. */
+  private aVista(registro: RegistroDiario): DayRecord {
+    return {
+      isPeriod: registro.hayMenstruacion,
+      symptoms: registroANombres(registro, this.todosLosSintomas),
+      emotions: this.nombresDe(registro.emociones, this.emotionOptions),
+      sexualActivities: this.nombresDe(registro.actividadesSexuales, this.sexualActivityOptions),
+      note: registro.nota ?? '',
+    };
+  }
+
+  /** GET /usuarias/{id}/registros-diarios y arma el historial. */
+  private async cargarRegistros(): Promise<void> {
+    try {
+      const lista = await this.api.verRegistros(this.sesion.idUsuario);
+      const mapa: Record<string, RegistroDiario> = {};
+      for (const registro of lista) {
+        mapa[registro.fecha] = registro;
+      }
+      this.registros = mapa;
+      this.history = lista
+        .filter(registro => registro.fecha <= this.today)
+        .sort((a, b) => b.fecha.localeCompare(a.fecha))
+        .map(registro => ({
+          date: registro.fecha,
+          label: new Date(`${registro.fecha}T12:00:00`).toLocaleDateString('es-CO', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+          }),
+          record: this.aVista(registro)
+        }));
+    } catch (error) {
+      this.registros = {};
+      this.history = [];
+      this.savedMessage = mensajeDeError(error, 'No se pudieron cargar tus registros.');
+    }
+    this.loadRecord(this.selectedDate);
   }
 
   private getLocalDate(): string {
@@ -168,29 +258,27 @@ export class Care {
   }
 
   private loadRecord(date: string): void {
-    const record = this.cycleService.records()[date];
+    const registro = this.registros[date];
 
-    this.isPeriod = record?.isPeriod ?? false;
+    this.isPeriod = registro?.hayMenstruacion ?? false;
 
-    this.flowIntensity = record?.flowIntensity ??
-      (record?.isPeriod ? 1 : 0);
+    this.flowIntensity = registro
+      ? backendAIntensidad(registro.tipoFlujo, registro.hayMenstruacion)
+      : 0;
 
-    this.selectedSymptoms = record?.symptoms
-      ? [...record.symptoms]
+    this.selectedSymptoms = registro
+      ? registroANombres(registro, this.todosLosSintomas)
       : [];
 
-    this.mood = record?.mood ?? null;
+    this.selectedEmotions = registro
+      ? this.nombresDe(registro.emociones, this.emotionOptions)
+      : [];
 
-    this.sexualActivity = record?.sexualActivity ?? null;
+    this.selectedSexualActivities = registro
+      ? this.nombresDe(registro.actividadesSexuales, this.sexualActivityOptions)
+      : [];
 
-    this.contraceptiveMethod = record?.contraceptiveMethod ?? '';
-
-    this.temperature = record?.temperature ?? null;
-
-    this.weight = record?.weight ??
-      this.cycleService.initialWeight();
-
-    this.note = record?.note ?? '';
+    this.note = registro?.nota ?? '';
   }
 
   onPeriodChange(value: boolean): void {
@@ -226,33 +314,85 @@ export class Care {
     }
   }
 
-  setMood(value: MoodOption): void {
-    if (!this.canEditSelected) return;
-    this.mood = value;
+  isEmotionSelected(emotion: string): boolean {
+    return this.selectedEmotions.includes(emotion);
   }
 
-  saveRecord(): void {
+  toggleEmotion(emotion: string, checked: boolean): void {
     if (!this.canEditSelected) return;
 
-    const record: DayRecord = {
-      isPeriod: this.isPeriod,
-      symptoms: [...this.selectedSymptoms],
-      flow: this.isPeriod ? this.getMenstrualFlow() : null,
-      flowIntensity: this.isPeriod ? this.flowIntensity : 0,
-      mood: this.mood as DailyMood | null,
-      sexualActivity: this.sexualActivity,
-      contraceptiveMethod: this.contraceptiveMethod || null,
-      temperature: this.temperature,
-      weight: this.weight,
-      note: this.note.trim()
-    };
-
-    this.cycleService.saveDay(this.selectedDate, record);
-
-    this.savedMessage = '¡Tu registro se guardó correctamente!';
+    if (checked && !this.selectedEmotions.includes(emotion)) {
+      this.selectedEmotions = [...this.selectedEmotions, emotion];
+    } else if (!checked) {
+      this.selectedEmotions = this.selectedEmotions.filter(
+        item => item !== emotion
+      );
+    }
   }
 
-  deleteRecord(): void {
+  isSexualActivitySelected(activity: string): boolean {
+    return this.selectedSexualActivities.includes(activity);
+  }
+
+  toggleSexualActivity(activity: string, checked: boolean): void {
+    if (!this.canEditSelected) return;
+
+    if (checked && !this.selectedSexualActivities.includes(activity)) {
+      this.selectedSexualActivities = [...this.selectedSexualActivities, activity];
+    } else if (!checked) {
+      this.selectedSexualActivities = this.selectedSexualActivities.filter(
+        item => item !== activity
+      );
+    }
+  }
+
+  /**
+   * Guarda el día en el backend (POST si es nuevo, PUT si ya existía).
+   * Se guarda: menstruación, tipo de flujo, síntomas, emociones y actividades sexuales del catálogo, y la nota.
+   */
+  async saveRecord(): Promise<void> {
+    if (!this.canEditSelected) return;
+
+    this.savedMessage = '';
+    try {
+      if (!this.catalogos) {
+        this.catalogos = await this.api.verCatalogos();
+      }
+      const catalogos = this.catalogos as any;
+
+      const traduccionSintomas = nombresACatalogo(this.selectedSymptoms, this.catalogos);
+      const emociones = this.traducir(this.selectedEmotions, catalogos?.emociones);
+      const actividades = this.traducir(this.selectedSexualActivities, catalogos?.actividadesSexuales);
+
+      const registro: RegistroDiario = {
+        fecha: this.selectedDate,
+        hayMenstruacion: this.isPeriod,
+        tipoFlujo: this.isPeriod ? intensidadABackend(this.flowIntensity) : null,
+        nota: this.note.trim() || null,
+        sintomas: traduccionSintomas.sintomas,
+        emociones: emociones.encontrados as RegistroDiario['emociones'],
+        actividadesSexuales: actividades.encontrados as RegistroDiario['actividadesSexuales'],
+      };
+
+      await this.api.guardarRegistro(this.sesion.idUsuario, registro, this.hasRecord);
+      await this.cargarRegistros();
+
+      const sinGuardar: string[] = [
+        ...traduccionSintomas.noGuardados,
+        ...emociones.noGuardados,
+        ...actividades.noGuardados
+      ];
+
+      this.savedMessage = sinGuardar.length === 0
+        ? '¡Tu registro se guardó correctamente!'
+        : '¡Tu registro se guardó! (No se encontró en el catálogo: ' + sinGuardar.join(', ') + '.)';
+    } catch (error) {
+      this.savedMessage = mensajeDeError(error, 'No se pudo guardar tu registro. Inténtalo de nuevo.');
+    }
+  }
+
+  /** DELETE /usuarias/{id}/registros-diarios/{fecha} */
+  async deleteRecord(): Promise<void> {
     if (!this.canEditSelected || !this.hasRecord) return;
 
     const confirmed = window.confirm(
@@ -261,27 +401,24 @@ export class Care {
 
     if (!confirmed) return;
 
-    this.cycleService.deleteDay(this.selectedDate);
-    this.loadRecord(this.selectedDate);
-
-    this.savedMessage = 'El registro fue eliminado.';
+    try {
+      await this.api.eliminarRegistro(this.sesion.idUsuario, this.selectedDate);
+      await this.cargarRegistros();
+      this.savedMessage = 'El registro fue eliminado.';
+    } catch (error) {
+      this.savedMessage = mensajeDeError(error, 'No se pudo eliminar el registro.');
+    }
   }
 
   openRecord(date: string): void {
     this.selectDate(date);
   }
 
-  getMoodEmoji(mood: string | null | undefined): string {
-    switch (mood) {
-      case 'positivo':
-        return '😊';
-      case 'negativo':
-        return '😔';
-      case 'general':
-        return '😐';
-      default:
-        return '—';
-    }
+  /** Emoji del historial: el de la primera emoción guardada ese día. */
+  getRecordEmoji(record: DayRecord): string {
+    const first = record.emotions[0];
+    const option = this.emotionOptions.find(item => item.name === first);
+    return option ? option.emoji : '—';
   }
 
   getRecordSummary(record: DayRecord): string {
@@ -295,12 +432,16 @@ export class Care {
       details.push(`${record.symptoms.length} síntomas`);
     }
 
-    if (record.mood) {
-      details.push(`Ánimo: ${record.mood}`);
+    if (record.emotions.length > 0) {
+      details.push(
+        record.emotions.length === 1
+          ? `Emoción: ${record.emotions[0]}`
+          : `${record.emotions.length} emociones`
+      );
     }
 
-    if (record.temperature !== null && record.temperature !== undefined) {
-      details.push('Temperatura');
+    if (record.sexualActivities.length > 0) {
+      details.push('Actividad sexual');
     }
 
     if (record.note.trim()) {
@@ -310,12 +451,5 @@ export class Care {
     return details.length > 0
       ? details.join(' · ')
       : 'Registro diario';
-  }
-
-  private getMenstrualFlow(): DayRecord['flow'] {
-    if (this.flowIntensity <= 1) return 'ligero';
-    if (this.flowIntensity === 2) return 'ligero';
-    if (this.flowIntensity === 3) return 'moderado';
-    return 'abundante';
   }
 }

@@ -1,7 +1,10 @@
-
 import { Component, inject, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+
+import { Registration } from '../../Core/registration';
+import { BloomApi, ErrorApi, mensajeDeError } from '../../Core/Services/bloom-api.service';
+import { Sesion } from '../../Core/Services/sesion.service';
 
 @Component({
   selector: 'app-login',
@@ -12,11 +15,15 @@ import { Router, RouterLink } from '@angular/router';
 export class Login {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
+  private readonly api = inject(BloomApi);
+  private readonly sesion = inject(Sesion);
+  private readonly registration = inject(Registration);
 
   readonly submitted = signal(false);
   readonly showPw = signal(false);
   readonly loading = signal(false);
   readonly errorMsg = signal('');
+  readonly infoMsg = signal('');
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -35,17 +42,60 @@ export class Login {
     return control.invalid && (control.touched || this.submitted());
   }
 
-  onSubmit(): void {
+  /**
+   * "¿Olvidaste tu contraseña?".
+   * TODO: cuando exista el endpoint en el backend, reemplazar el aviso de abajo por la llamada
+   * (por ejemplo, enviar el correo de this.email.value y navegar a la pantalla de recuperación).
+   */
+  forgotPassword(): void {
+    this.errorMsg.set('');
+    this.infoMsg.set('Muy pronto podrás recuperar tu contraseña ♡');
+  }
+
+  /**
+   * POST /autenticacion/iniciar-sesion.
+   *  - 200: si ya llenó la encuesta va al home; si no, a la encuesta (C.7).
+   *  - 403: el correo no está verificado: se envía un código nuevo y va a /verificar.
+   *  - 401: correo o contraseña incorrectos (el backend manda el mensaje).
+   */
+  async onSubmit(): Promise<void> {
     this.submitted.set(true);
     this.errorMsg.set('');
+    this.infoMsg.set('');
 
     if (this.form.invalid) {
       return;
     }
 
     this.loading.set(true);
+    const email = this.form.controls.email.value.trim().toLowerCase();
 
-    // TODO: conectar con el servicio de autenticación.
-    this.router.navigate(['/home']);
+    try {
+      const usuaria = await this.api.iniciarSesion(email, this.form.controls.password.value);
+
+      if (!usuaria.encuestaCompletada) {
+        this.registration.startSurvey(usuaria.correoElectronico, usuaria.apodo, usuaria.idUsuario);
+        await this.router.navigate(['/encuesta']);
+        return;
+      }
+
+      this.sesion.iniciar(usuaria);
+      await this.router.navigate(['/home']);
+    } catch (error) {
+      if (error instanceof ErrorApi && error.estado === 403) {
+        // El código del registro pudo haber vencido: se pide uno nuevo antes de ir a verificar.
+        this.registration.startVerification(email);
+        try {
+          await this.api.solicitarCodigo(email);
+        } catch {
+          // Si falla, en /verificar puede pedirlo otra vez con "Reenviar código".
+        }
+        await this.router.navigate(['/verificar']);
+        return;
+      }
+      this.errorMsg.set(mensajeDeError(error, 'No pudimos iniciar sesión. Inténtalo de nuevo.'));
+    } finally {
+      this.loading.set(false);
+    }
   }
 }

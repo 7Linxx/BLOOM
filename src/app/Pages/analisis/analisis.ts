@@ -1,18 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { CycleService, DayRecord } from '../../Core/Services/cycle.service';
+
+import { BloomApi, mensajeDeError } from '../../Core/Services/bloom-api.service';
+import { Sesion } from '../../Core/Services/sesion.service';
+import { CicloActual, EstadisticaPeriodo, EstadisticaResumen } from '../../Core/modelos';
+import { textoAFecha } from '../../Core/mapeos';
 
 type PeriodRange = '3m' | '6m' | '12m' | 'all';
-
-interface CycleInfo {
-  start: Date;
-  duration: number;
-}
-
-interface PeriodInfo {
-  start: Date;
-  duration: number;
-}
 
 interface Indicator {
   title: string;
@@ -22,6 +16,33 @@ interface Indicator {
   color: string;
 }
 
+/** Un síntoma del ranking (los 5 más frecuentes que manda el backend). */
+interface SymptomRank {
+  position: number;
+  name: string;
+  count: number;
+  percent: number;
+}
+
+/** Una fila del historial de ciclos. */
+interface CycleRow {
+  start: Date | null;
+  end: Date | null;
+  days: number | null;
+  inProgress: boolean;
+}
+
+/** Lo que tienen en común las estadísticas generales y las de un periodo. */
+type Estadistica = EstadisticaResumen | EstadisticaPeriodo;
+
+/**
+ * Estadísticas conectadas al backend:
+ *  - "Todo el historial": GET /usuarias/{id}/estadisticas (MongoDB, colección estadisticas_resumen).
+ *  - 3, 6 o 12 meses: GET /usuarias/{id}/estadisticas/periodo?desde=AAAA-MM&hasta=AAAA-MM (buckets mensuales).
+ *  - Seguimiento del ciclo: GET /usuarias/{id}/ciclo-actual.
+ *  - Historial de ciclos: GET /usuarias/{id}/ciclos.
+ * Los promedios del backend solo cuentan ciclos FINALIZADOS (el ciclo en curso no entra).
+ */
 @Component({
   selector: 'app-analisis',
   standalone: true,
@@ -30,7 +51,8 @@ interface Indicator {
   styleUrl: './analisis.css'
 })
 export class Analisis {
-  private cycleService = inject(CycleService);
+  private readonly api = inject(BloomApi);
+  private readonly sesion = inject(Sesion);
 
   today = new Date();
   selectedRange: PeriodRange = '6m';
@@ -42,329 +64,113 @@ export class Analisis {
     { value: 'all', label: 'Todo el historial' }
   ];
 
-  private get records(): Record<string, DayRecord> {
-    return this.cycleService.records();
-  }
+  /** Estadísticas del rango elegido (null mientras cargan o si fallan). */
+  private estadistica: Estadistica | null = null;
 
-  private get allPeriodDays(): Date[] {
-    return Object.entries(this.records)
-      .filter(([, record]) => record.isPeriod)
-      .map(([key]) => this.parseDate(key))
-      .filter((date): date is Date => date !== null)
-      .sort((a, b) => a.getTime() - b.getTime());
-  }
+  /** Ciclo actual con predicciones (null si todavía no hay ciclos). */
+  private cicloActual: CicloActual | null = null;
 
-  private get allPeriodStarts(): Date[] {
-    const days = this.allPeriodDays;
-    const starts: Date[] = [];
+  /** Historial de ciclos (el más reciente primero). */
+  private cycleRows: CycleRow[] = [];
 
-    for (const day of days) {
-      const previousDay = this.addDays(day, -1);
+  /** Cuántos ciclos se ven al inicio del historial. */
+  private readonly cyclesPreview = 6;
+  showAllCycles = false;
 
-      const isFirstDay = !days.some(
-        recordedDay => this.sameDay(recordedDay, previousDay)
-      );
+  /** Mensaje si el backend no respondió (por ejemplo, MongoDB apagado). */
+  errorMessage = '';
 
-      if (isFirstDay) {
-        starts.push(day);
-      }
-    }
-
-    return starts;
-  }
-
-  private get allCycles(): CycleInfo[] {
-    const starts = this.allPeriodStarts;
-    const cycles: CycleInfo[] = [];
-
-    for (let i = 0; i < starts.length - 1; i++) {
-      const duration = this.daysBetween(starts[i], starts[i + 1]);
-
-      if (duration > 0 && duration <= 90) {
-        cycles.push({
-          start: starts[i],
-          duration
-        });
-      }
-    }
-
-    return cycles;
-  }
-
-  private get allPeriods(): PeriodInfo[] {
-    const days = this.allPeriodDays;
-    const periods: PeriodInfo[] = [];
-
-    if (days.length === 0) {
-      return periods;
-    }
-
-    let start = days[0];
-    let duration = 1;
-    let previous = days[0];
-
-    for (let i = 1; i < days.length; i++) {
-      const current = days[i];
-      const difference = this.daysBetween(previous, current);
-
-      if (difference === 1) {
-        duration++;
-      } else {
-        periods.push({ start, duration });
-        start = current;
-        duration = 1;
-      }
-
-      previous = current;
-    }
-
-    periods.push({ start, duration });
-
-    return periods;
-  }
-
-  private get rangeStart(): Date | null {
-    if (this.selectedRange === 'all') {
-      return null;
-    }
-
-    const months = Number(this.selectedRange.replace('m', ''));
-    const date = new Date(
-      this.today.getFullYear(),
-      this.today.getMonth() - months,
-      this.today.getDate()
-    );
-
-    return date;
-  }
-
-  private isInsideRange(date: Date): boolean {
-    if (!this.rangeStart) {
-      return true;
-    }
-
-    return date >= this.rangeStart && date <= this.today;
-  }
-
-  get filteredCycles(): CycleInfo[] {
-    return this.allCycles.filter(cycle =>
-      this.isInsideRange(cycle.start)
-    );
-  }
-
-  get filteredPeriods(): PeriodInfo[] {
-    return this.allPeriods.filter(period =>
-      this.isInsideRange(period.start)
-    );
-  }
-
-  get averageCycle(): number | null {
-    const durations = this.filteredCycles.map(cycle => cycle.duration);
-
-    if (durations.length === 0) {
-      return null;
-    }
-
-    return Math.round(
-      durations.reduce((total, value) => total + value, 0) /
-      durations.length
-    );
-  }
-
-  get averagePeriod(): number | null {
-    const durations = this.filteredPeriods.map(period => period.duration);
-
-    if (durations.length === 0) {
-      return null;
-    }
-
-    return Math.round(
-      durations.reduce((total, value) => total + value, 0) /
-      durations.length
-    );
-  }
-
-  get shortestCycle(): number | null {
-    const durations = this.filteredCycles.map(cycle => cycle.duration);
-
-    return durations.length > 0 ? Math.min(...durations) : null;
-  }
-
-  get longestCycle(): number | null {
-    const durations = this.filteredCycles.map(cycle => cycle.duration);
-
-    return durations.length > 0 ? Math.max(...durations) : null;
-  }
-
-  get frequentSymptom(): string {
-    const symptomCounts = new Map<string, number>();
-
-    Object.entries(this.records).forEach(([key, record]) => {
-      const date = this.parseDate(key);
-
-      if (!date || !this.isInsideRange(date)) {
-        return;
-      }
-
-      (record.symptoms ?? []).forEach(symptom => {
-        symptomCounts.set(
-          symptom,
-          (symptomCounts.get(symptom) ?? 0) + 1
-        );
-      });
-    });
-
-    let mostFrequent = '';
-    let highestCount = 0;
-
-    symptomCounts.forEach((count, symptom) => {
-      if (count > highestCount) {
-        highestCount = count;
-        mostFrequent = symptom;
-      }
-    });
-
-    return mostFrequent;
-  }
-
-  get frequentSymptomCount(): number {
-    if (!this.frequentSymptom) {
-      return 0;
-    }
-
-    let count = 0;
-
-    Object.entries(this.records).forEach(([key, record]) => {
-      const date = this.parseDate(key);
-
-      if (
-        date &&
-        this.isInsideRange(date) &&
-        (record.symptoms ?? []).includes(this.frequentSymptom)
-      ) {
-        count++;
-      }
-    });
-
-    return count;
-  }
-
-  get confirmedCycleStart(): Date | null {
-    const starts = this.allPeriodStarts.filter(
-      date => date <= this.today
-    );
-
-    return starts.length > 0 ? starts[starts.length - 1] : null;
-  }
-
-  get currentCycleDay(): number | null {
-    if (!this.confirmedCycleStart) {
-      return null;
-    }
-
-    return this.daysBetween(this.confirmedCycleStart, this.today) + 1;
-  }
-
-  get estimatedCycleDuration(): number {
-    return this.cycleService.getEstimatedCycleLength(
-      this.cycleService.getPeriodStarts()
-    );
-  }
-  get estimatedPeriodDuration(): number {
-    return this.averagePeriod ??
-      this.cycleService.getEstimatedPeriodLength();
-  }
-
-  get nextPeriodDate(): Date | null {
-    if (!this.confirmedCycleStart) {
-      return null;
-    }
-
-    return this.addDays(
-      this.confirmedCycleStart,
-      this.estimatedCycleDuration
-    );
-  }
-
-  get daysUntilNextPeriod(): number | null {
-    if (!this.nextPeriodDate) {
-      return null;
-    }
-
-    return this.daysBetween(this.today, this.nextPeriodDate);
-  }
-
-  get hasCycleHistory(): boolean {
-    return this.allPeriodStarts.length > 0;
-  }
-
-  get hasEnoughCycleData(): boolean {
-    return this.filteredCycles.length > 0;
+  constructor() {
+    this.cargarEstadisticas();
+    this.api.verCicloActual(this.sesion.idUsuario)
+      .then(ciclo => this.cicloActual = ciclo)
+      .catch(() => this.cicloActual = null);
+    this.cargarCiclos();
   }
 
   get totalCycles(): number {
-    return this.filteredCycles.length;
+    return this.estadistica?.totalCiclos ?? 0;
   }
 
-  get totalPeriods(): number {
-    return this.filteredPeriods.length;
+  get frequentSymptom(): string {
+    return this.estadistica?.sintomasFrecuentes?.[0]?.nombre ?? '';
+  }
+
+  get frequentSymptomCount(): number {
+    return this.estadistica?.sintomasFrecuentes?.[0]?.conteo ?? 0;
+  }
+
+  /** Los 5 síntomas más frecuentes (el backend ya los manda ordenados). */
+  get topSymptoms(): SymptomRank[] {
+    const lista = (this.estadistica?.sintomasFrecuentes ?? []).slice(0, 5);
+    const maximo = Math.max(0, ...lista.map(item => item.conteo ?? 0));
+
+    return lista.map((item, index) => ({
+      position: index + 1,
+      name: item.nombre,
+      count: item.conteo ?? 0,
+      percent: maximo > 0 ? Math.round(((item.conteo ?? 0) / maximo) * 100) : 0
+    }));
+  }
+
+  get visibleCycles(): CycleRow[] {
+    return this.showAllCycles
+      ? this.cycleRows
+      : this.cycleRows.slice(0, this.cyclesPreview);
+  }
+
+  get totalCycleRows(): number {
+    return this.cycleRows.length;
+  }
+
+  get canToggleCycles(): boolean {
+    return this.cycleRows.length > this.cyclesPreview;
+  }
+
+  get nextPeriodDate(): Date | null {
+    return this.cicloActual ? textoAFecha(this.cicloActual.fechaEstimadaSiguientePeriodo) : null;
   }
 
   get calculationMethod(): string {
-    return this.allCycles.length >= 2
-      ? 'Historial de ciclos'
-      : 'Datos de tu registro inicial';
+    return this.cicloActual?.metodoCalculo === 'MANUAL'
+      ? 'Duración fija de tus ajustes'
+      : 'Historial de ciclos';
   }
 
   get calculationDescription(): string {
-    return this.allCycles.length >= 2
-      ? 'BLOOM utiliza tus ciclos registrados para estimar las próximas fechas.'
-      : 'Aún no hay suficientes ciclos registrados. Por ahora se utilizan los valores de tu registro inicial.';
+    return this.cicloActual?.metodoCalculo === 'MANUAL'
+      ? 'Elegiste el cálculo manual: BLOOM usa la duración de ciclo que guardaste en tu perfil.'
+      : 'BLOOM utiliza el promedio de tus últimos ciclos registrados para estimar las próximas fechas.';
   }
 
   get cycleIndicators(): Indicator[] {
+    const e = this.estadistica;
     return [
       {
         title: 'Duración promedio del ciclo',
-        value: this.averageCycle !== null
-          ? `${this.averageCycle} días`
-          : this.hasCycleHistory
-            ? `${this.estimatedCycleDuration} días`
-            : 'Sin datos',
-        description: this.averageCycle !== null
-          ? 'Promedio de tus ciclos registrados'
-          : 'Valor de tu registro inicial',
+        value: this.dias(e?.promedioDuracionCiclo),
+        description: 'Promedio de tus ciclos finalizados',
         icon: '♡',
         color: 'pink'
       },
       {
         title: 'Duración promedio del periodo',
-        value: this.averagePeriod !== null
-          ? `${this.averagePeriod} días`
-          : this.hasCycleHistory
-            ? `${this.estimatedPeriodDuration} días`
-            : 'Sin datos',
-        description: this.averagePeriod !== null
-          ? 'Promedio de tus menstruaciones'
-          : 'Valor de tu registro inicial',
+        value: this.dias(e?.promedioDuracionPeriodo),
+        description: 'Promedio de tus menstruaciones',
         icon: '✿',
         color: 'peach'
       },
       {
         title: 'Ciclo más corto',
-        value: this.shortestCycle !== null
-          ? `${this.shortestCycle} días`
-          : 'Sin datos',
-        description: 'Entre los ciclos registrados',
+        value: this.dias(e?.cicloMasCorto?.duracion),
+        description: 'Entre los ciclos finalizados',
         icon: '↓',
         color: 'lilac'
       },
       {
         title: 'Ciclo más largo',
-        value: this.longestCycle !== null
-          ? `${this.longestCycle} días`
-          : 'Sin datos',
-        description: 'Entre los ciclos registrados',
+        value: this.dias(e?.cicloMasLargo?.duracion),
+        description: 'Entre los ciclos finalizados',
         icon: '↑',
         color: 'yellow'
       }
@@ -372,41 +178,36 @@ export class Analisis {
   }
 
   get trackingIndicators(): Indicator[] {
+    const ciclo = this.cicloActual;
     return [
       {
         title: 'Día actual del ciclo',
-        value: this.currentCycleDay !== null
-          ? `Día ${this.currentCycleDay}`
-          : 'Sin datos',
+        value: ciclo ? `Día ${ciclo.diaDelCiclo}` : 'Sin datos',
         description: 'Desde el último inicio confirmado',
         icon: '☼',
         color: 'peach'
       },
       {
         title: 'Próximo periodo estimado',
-        value: this.nextPeriodDate
-          ? this.formatDate(this.nextPeriodDate)
-          : 'Sin estimación',
+        value: this.nextPeriodDate ? this.formatDate(this.nextPeriodDate) : 'Sin estimación',
         description: 'Fecha aproximada, no confirmada',
         icon: '♡',
         color: 'pink'
       },
       {
         title: 'Duración estimada del ciclo',
-        value: this.hasCycleHistory || this.cycleService.cycleLength()
-          ? `${this.estimatedCycleDuration} días`
-          : 'Sin datos',
-        description: 'Según tu historial o registro inicial',
+        value: ciclo ? `${ciclo.duracionEstimada} días` : 'Sin datos',
+        description: 'Según tu historial o tus ajustes',
         icon: '◷',
         color: 'lilac'
       },
       {
         title: 'Días para el próximo periodo',
-        value: this.daysUntilNextPeriod !== null
-          ? this.daysUntilNextPeriod >= 0
-            ? `${this.daysUntilNextPeriod} días`
-            : `${Math.abs(this.daysUntilNextPeriod)} días de retraso`
-          : 'Sin estimación',
+        value: !ciclo
+          ? 'Sin estimación'
+          : ciclo.periodoRetrasado
+            ? `${ciclo.diasRetraso} días de retraso`
+            : `${ciclo.diasParaSiguientePeriodo} días`,
         description: 'Cálculo basado en tus registros',
         icon: '✧',
         color: 'yellow'
@@ -415,6 +216,9 @@ export class Analisis {
   }
 
   get symptomMessage(): string {
+    if (this.errorMessage) {
+      return this.errorMessage;
+    }
     if (!this.frequentSymptom) {
       return 'Todavía no hay síntomas registrados en este periodo.';
     }
@@ -432,7 +236,12 @@ export class Analisis {
       value === 'all'
     ) {
       this.selectedRange = value;
+      this.cargarEstadisticas();
     }
+  }
+
+  toggleCycles(): void {
+    this.showAllCycles = !this.showAllCycles;
   }
 
   formatDate(date: Date): string {
@@ -443,50 +252,61 @@ export class Analisis {
     }).format(date);
   }
 
-  private parseDate(key: string): Date | null {
-    const parts = key.split('-').map(Number);
+  /** Pide las estadísticas del rango elegido. */
+  private async cargarEstadisticas(): Promise<void> {
+    this.errorMessage = '';
+    try {
+      if (this.selectedRange === 'all') {
+        this.estadistica = await this.api.verEstadisticas(this.sesion.idUsuario);
+      } else {
+        const meses = Number(this.selectedRange.replace('m', ''));
+        const desde = new Date(this.today.getFullYear(), this.today.getMonth() - meses + 1, 1);
+        this.estadistica = await this.api.verEstadisticasPeriodo(
+          this.sesion.idUsuario,
+          this.anioMes(desde),
+          this.anioMes(this.today)
+        );
+      }
+    } catch (error) {
+      this.estadistica = null;
+      this.errorMessage = mensajeDeError(error, 'No se pudieron cargar tus estadísticas.');
+    }
+  }
 
-    if (parts.length !== 3 || parts.some(part => Number.isNaN(part))) {
-      return null;
+  /**
+   * GET /usuarias/{id}/ciclos.
+   * ⚠ ajusta: se asume verCiclos() y los campos fechaInicio, fechaFin y duracion (o duracionCiclo).
+   */
+  private async cargarCiclos(): Promise<void> {
+    try {
+      const lista: any[] = await (this.api as any).verCiclos(this.sesion.idUsuario);
+      this.cycleRows = (lista ?? [])
+        .map(ciclo => this.aFila(ciclo))
+        .sort((a, b) => (b.start?.getTime() ?? 0) - (a.start?.getTime() ?? 0));
+    } catch {
+      this.cycleRows = [];
+    }
+  }
+
+  private aFila(ciclo: any): CycleRow {
+    const start = ciclo?.fechaInicio ? textoAFecha(ciclo.fechaInicio) : null;
+    const end = ciclo?.fechaFin ? textoAFecha(ciclo.fechaFin) : null;
+
+    let days: number | null = ciclo?.duracion ?? ciclo?.duracionCiclo ?? null;
+    if (days === null && start && end) {
+      days = Math.round((end.getTime() - start.getTime()) / 86400000) + 1;
     }
 
-    const [year, month, day] = parts;
-    const date = new Date(year, month - 1, day);
-
-    return this.isValidDate(date) ? date : null;
+    return { start, end, days, inProgress: !end };
   }
 
-  private isValidDate(date: Date): boolean {
-    return !Number.isNaN(date.getTime());
+  /** Date -> 'AAAA-MM' (formato que pide /estadisticas/periodo). */
+  private anioMes(fecha: Date): string {
+    return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
   }
 
-  private addDays(date: Date, amount: number): Date {
-    const result = new Date(date);
-    result.setDate(result.getDate() + amount);
-    return result;
-  }
-
-  private daysBetween(start: Date, end: Date): number {
-    const first = new Date(
-      start.getFullYear(),
-      start.getMonth(),
-      start.getDate()
-    );
-
-    const second = new Date(
-      end.getFullYear(),
-      end.getMonth(),
-      end.getDate()
-    );
-
-    return Math.round(
-      (second.getTime() - first.getTime()) / 86400000
-    );
-  }
-
-  private sameDay(first: Date, second: Date): boolean {
-    return first.getFullYear() === second.getFullYear() &&
-      first.getMonth() === second.getMonth() &&
-      first.getDate() === second.getDate();
+  /** Número de días redondeado, o 'Sin datos'. */
+  private dias(valor: number | null | undefined): string {
+    return valor !== null && valor !== undefined ? `${Math.round(valor)} días` : 'Sin datos';
   }
 }

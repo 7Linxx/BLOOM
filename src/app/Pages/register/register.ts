@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
 import { Registration, RegisterData } from '../../Core/registration';
+import { mensajeDeError } from '../../Core/Services/bloom-api.service';
 
 import {
   NAME_PATTERN,
@@ -25,18 +26,16 @@ type FieldName =
   | 'password'
   | 'confirmar';
 
+// Mismas reglas que strongPassword (front) y que el backend:
+// mínimo 8 caracteres, al menos una letra y al menos un número.
 const PASSWORD_RULES = [
   {
     label: 'Mínimo 8 caracteres',
     test: (value: string) => value.length >= 8,
   },
   {
-    label: 'Una mayúscula',
-    test: (value: string) => /[A-ZÁÉÍÓÚÑ]/.test(value),
-  },
-  {
-    label: 'Una minúscula',
-    test: (value: string) => /[a-záéíóúñ]/.test(value),
+    label: 'Una letra',
+    test: (value: string) => /[A-Za-zÁÉÍÓÚÑáéíóúñ]/.test(value),
   },
   {
     label: 'Un número',
@@ -199,7 +198,7 @@ export class Register {
 
     password: {
       required: 'Escribe una contraseña.',
-      weak: 'La contraseña no cumple todos los requisitos.',
+      weak: 'Usa mínimo 8 caracteres, una letra y un número.',
     },
 
     confirmar: {
@@ -268,9 +267,10 @@ export class Register {
 
       await this.router.navigate(['/verificar']);
 
-    } catch {
+    } catch (error) {
+      // El backend explica el problema (ej: "Ya existe una cuenta con ese correo.").
       this.serverError.set(
-        'No pudimos crear tu cuenta. Revisa tus datos e inténtalo de nuevo.'
+        mensajeDeError(error, 'No pudimos crear tu cuenta. Revisa tus datos e inténtalo de nuevo.')
       );
 
     } finally {

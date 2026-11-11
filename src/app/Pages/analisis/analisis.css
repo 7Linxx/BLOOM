@@ -801,3 +801,217 @@
     transition: none !important;
   }
 }
+
+/* HISTORIAL DE CICLOS */
+
+.cycle-history {
+  padding: 22px 24px;
+  margin-top: 18px;
+
+  background: #fffdf9;
+  border: 1.5px solid #f4dce3;
+  border-radius: 25px;
+  box-shadow: 0 8px 20px rgba(168, 62, 96, 0.05);
+}
+
+.cycle-history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.cycle-history-heading h3 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.cycle-history-heading > span {
+  padding: 7px 13px;
+  color: #9b7028;
+  background: #fff2c9;
+  border: 1px solid #f5dfa0;
+  border-radius: var(--r-full);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.cycle-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cycle-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 15px;
+
+  background: #fff8f5;
+  border: 1.5px solid #f4dce3;
+  border-radius: 16px;
+}
+
+.cycle-dot {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  place-items: center;
+  color: var(--c-crimson);
+  background: #ffe8ef;
+  border: 1px solid #f5d0dc;
+  border-radius: 12px;
+  font-size: 17px;
+}
+
+.cycle-dates {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cycle-dates strong {
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.cycle-dates span {
+  color: var(--c-text-soft);
+  font-size: 11px;
+}
+
+.cycle-badge {
+  padding: 6px 11px;
+  color: var(--c-crimson);
+  background: #fff0b8;
+  border: 1px solid #f2cf6b;
+  border-radius: var(--r-full);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.cycle-toggle {
+  padding: 10px 18px;
+  margin-top: 14px;
+
+  color: #a3103e;
+  background: #fff0b8;
+  border: 1.5px solid #f2cf6b;
+  border-radius: var(--r-full);
+
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+
+  transition: transform var(--t-med), background var(--t-med);
+}
+
+.cycle-toggle:hover {
+  background: #ffe49a;
+  transform: translateY(-2px);
+}
+
+/* RANKING DE SÍNTOMAS */
+
+.symptom-ranking {
+  padding: 22px 24px;
+  margin-top: 14px;
+
+  background: #fffdf9;
+  border: 1.5px solid #f4dce3;
+  border-radius: 25px;
+  box-shadow: 0 8px 20px rgba(168, 62, 96, 0.05);
+}
+
+.ranking-title {
+  margin: 0 0 16px;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.ranking-item {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.ranking-item + .ranking-item {
+  margin-top: 14px;
+}
+
+.ranking-position {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  place-items: center;
+  color: var(--c-crimson);
+  background: #ffe8ef;
+  border: 1px solid #f5d0dc;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.ranking-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.ranking-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+
+.ranking-top strong {
+  color: var(--ink);
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.ranking-top span {
+  color: var(--c-text-soft);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.ranking-bar {
+  height: 9px;
+  overflow: hidden;
+  background: #f8ebef;
+  border-radius: var(--r-full);
+}
+
+.ranking-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #f4c85c, #e8bd55);
+  border-radius: var(--r-full);
+  transition: width 0.5s ease;
+}
+
+@media (max-width: 650px) {
+  .cycle-history,
+  .symptom-ranking {
+    padding: 18px;
+  }
+
+  .cycle-row {
+    flex-wrap: wrap;
+  }
+}

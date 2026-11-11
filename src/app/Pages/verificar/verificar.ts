@@ -3,6 +3,7 @@ import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
 import { Registration } from '../../Core/registration';
+import { mensajeDeError } from '../../Core/Services/bloom-api.service';
 
 const RESEND_SECONDS = 60;
 
@@ -25,7 +26,8 @@ export class Verificar {
     nonNullable: true,
     validators: [
       Validators.required,
-      Validators.pattern(/^[A-Za-z0-9]{7}$/),
+      // El backend genera códigos de 6 dígitos (UsuariaService.generarCodigo).
+      Validators.pattern(/^[0-9]{6}$/),
     ],
   });
 
@@ -60,7 +62,7 @@ export class Verificar {
     }
 
     if (this.code.hasError('pattern')) {
-      return 'El código debe tener 7 caracteres entre letras y números.';
+      return 'El código debe tener 6 números.';
     }
 
     return null;
@@ -80,10 +82,18 @@ export class Verificar {
 
     try {
       await this.registration.verifyCode(this.code.value.trim());
-      await this.router.navigate(['/encuesta']);
-    } catch {
+      // Si vino del registro se sabe su id y sigue a la encuesta.
+      // Si vino del login (cuenta sin verificar), vuelve a iniciar sesión para saber quién es.
+      if (this.registration.hasUserId) {
+        await this.router.navigate(['/encuesta']);
+      } else {
+        this.registration.reset();
+        await this.router.navigate(['/login']);
+      }
+    } catch (error) {
+      // 400 = código incorrecto, 410 = código vencido (el backend manda el mensaje).
       this.serverError.set(
-        'El código no es correcto o ya venció. Revísalo o pide uno nuevo.',
+        mensajeDeError(error, 'El código no es correcto o ya venció. Revísalo o pide uno nuevo.'),
       );
     } finally {
       this.sending.set(false);
@@ -103,9 +113,9 @@ export class Verificar {
       this.code.reset();
       this.submitted.set(false);
       this.startCooldown();
-    } catch {
+    } catch (error) {
       this.serverError.set(
-        'No pudimos enviar el código. Inténtalo de nuevo en un momento.',
+        mensajeDeError(error, 'No pudimos enviar el código. Inténtalo de nuevo en un momento.'),
       );
     } finally {
       this.resending.set(false);

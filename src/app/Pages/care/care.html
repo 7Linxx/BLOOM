@@ -1,4 +1,3 @@
-
 <main class="care-page">
 
   <section class="care-heading">
@@ -125,52 +124,30 @@
         </div>
       </section>
 
-      <!-- ESTADO DE ÁNIMO -->
+      <!-- EMOCIONES -->
       <section class="care-card">
         <div class="section-heading">
           <span class="section-icon">☀️</span>
           <div>
-            <h2>Estado de ánimo</h2>
-            <p>¿Cómo te sentiste emocionalmente?</p>
+            <h2>Emociones</h2>
+            <p>¿Cómo te sentiste emocionalmente? Puedes elegir varias.</p>
           </div>
         </div>
 
-        <div class="mood-options">
-          <button
-            type="button"
-            class="mood-option"
-            [class.active]="mood === 'positivo'"
-            [disabled]="!canEditSelected"
-            (click)="setMood('positivo')"
+        <div class="symptom-grid">
+          <label
+            class="symptom-option"
+            *ngFor="let emotion of emotionOptions"
+            [class.selected]="isEmotionSelected(emotion.name)"
           >
-            <span>😊</span>
-            <strong>Positivo</strong>
-            <small>Me siento bien</small>
-          </button>
-
-          <button
-            type="button"
-            class="mood-option"
-            [class.active]="mood === 'general'"
-            [disabled]="!canEditSelected"
-            (click)="setMood('general')"
-          >
-            <span>😐</span>
-            <strong>General</strong>
-            <small>Un día normal</small>
-          </button>
-
-          <button
-            type="button"
-            class="mood-option"
-            [class.active]="mood === 'negativo'"
-            [disabled]="!canEditSelected"
-            (click)="setMood('negativo')"
-          >
-            <span>😔</span>
-            <strong>Negativo</strong>
-            <small>No me siento bien</small>
-          </button>
+            <input
+              type="checkbox"
+              [checked]="isEmotionSelected(emotion.name)"
+              [disabled]="!canEditSelected"
+              (change)="toggleEmotion(emotion.name, $any($event.target).checked)"
+            />
+            <span>{{ emotion.emoji }} {{ emotion.name }}</span>
+          </label>
         </div>
       </section>
 
@@ -180,92 +157,24 @@
           <span class="section-icon">💕</span>
           <div>
             <h2>Actividad sexual</h2>
-            <p>¿Tuviste actividad sexual hoy?</p>
+            <p>Selecciona si aplica para este día.</p>
           </div>
         </div>
 
-        <div class="choice-row">
-          <button
-            type="button"
-            class="choice-button"
-            [class.active]="sexualActivity === true"
-            [disabled]="!canEditSelected"
-            (click)="sexualActivity = true"
+        <div class="symptom-grid">
+          <label
+            class="symptom-option"
+            *ngFor="let activity of sexualActivityOptions"
+            [class.selected]="isSexualActivitySelected(activity.name)"
           >
-            Sí
-          </button>
-
-          <button
-            type="button"
-            class="choice-button"
-            [class.active]="sexualActivity === false"
-            [disabled]="!canEditSelected"
-            (click)="sexualActivity = false"
-          >
-            No
-          </button>
-        </div>
-
-        <div class="field-group">
-          <label for="contraceptive">Método anticonceptivo</label>
-          <select
-            id="contraceptive"
-            [(ngModel)]="contraceptiveMethod"
-            [disabled]="!canEditSelected"
-          >
-            <option value="">Seleccionar método</option>
-            <option *ngFor="let option of contraceptiveOptions" [value]="option">
-              {{ option }}
-            </option>
-          </select>
-        </div>
-      </section>
-
-      <!-- MEDICIONES -->
-      <section class="care-card">
-        <div class="section-heading">
-          <span class="section-icon">🌡️</span>
-          <div>
-            <h2>Mediciones diarias</h2>
-            <p>Registra algunos cambios físicos de tu cuerpo.</p>
-          </div>
-        </div>
-
-        <div class="measurements-grid">
-          <div class="field-group">
-            <label for="temperature">Temperatura corporal</label>
-            <div class="input-with-unit">
-              <input
-                id="temperature"
-                type="number"
-                step="0.1"
-                min="30"
-                max="45"
-                placeholder="Ej. 36.5"
-                [(ngModel)]="temperature"
-                [disabled]="!canEditSelected"
-              />
-              <span>°C</span>
-            </div>
-          </div>
-
-          <div class="field-group">
-            <label for="weight">Peso corporal</label>
-            <div class="input-with-unit">
-              <input
-                id="weight"
-                type="number"
-                step="0.1"
-                min="1"
-                max="500"
-                placeholder="Ej. 55.0"
-                [(ngModel)]="weight"
-                [disabled]="!canEditSelected"
-              />
-              <span>kg</span>
-            </div>
-            <small>Tu peso inicial puede provenir de tu registro de bienvenida.</small>
-          </div>
+            <input
+              type="checkbox"
+              [checked]="isSexualActivitySelected(activity.name)"
+              [disabled]="!canEditSelected"
+              (change)="toggleSexualActivity(activity.name, $any($event.target).checked)"
+            />
+            <span>{{ activity.emoji }} {{ activity.name }}</span>
+          </label>
         </div>
       </section>
 
@@ -351,7 +260,7 @@
             </span>
 
             <span class="history-mood">
-              {{ getMoodEmoji(item.record.mood) }}
+              {{ getRecordEmoji(item.record) }}
             </span>
           </button>
         </div>

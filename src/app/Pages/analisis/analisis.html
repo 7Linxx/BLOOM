@@ -77,10 +77,45 @@
         </strong>
 
         <p>
-          Las estadísticas se calculan únicamente con los registros
-          disponibles.
+          Los promedios solo cuentan ciclos finalizados: el ciclo que
+          está en curso todavía no entra en las estadísticas.
         </p>
       </div>
+    </div>
+
+    <!-- HISTORIAL DE CICLOS -->
+    <div class="cycle-history" *ngIf="totalCycleRows > 0">
+      <div class="cycle-history-heading">
+        <h3>Historial de ciclos</h3>
+        <span>{{ totalCycleRows }} {{ totalCycleRows === 1 ? 'ciclo' : 'ciclos' }}</span>
+      </div>
+
+      <div class="cycle-list">
+        <div class="cycle-row" *ngFor="let cycle of visibleCycles">
+          <span class="cycle-dot">✿</span>
+
+          <div class="cycle-dates">
+            <strong>
+              {{ cycle.start ? formatDate(cycle.start) : 'Fecha sin registrar' }}
+              <ng-container *ngIf="cycle.end"> → {{ formatDate(cycle.end) }}</ng-container>
+            </strong>
+            <span>
+              {{ cycle.days !== null ? cycle.days + ' días' : 'Duración sin calcular' }}
+            </span>
+          </div>
+
+          <span class="cycle-badge" *ngIf="cycle.inProgress">En curso</span>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="cycle-toggle"
+        *ngIf="canToggleCycles"
+        (click)="toggleCycles()"
+      >
+        {{ showAllCycles ? 'Ver menos' : 'Ver todos los ciclos' }}
+      </button>
     </div>
   </section>
 
@@ -161,6 +196,28 @@
       <div class="personal-count" *ngIf="frequentSymptom">
         <strong>{{ frequentSymptomCount }}</strong>
         <span>registros</span>
+      </div>
+    </div>
+
+    <!-- RANKING DE SÍNTOMAS -->
+    <div class="symptom-ranking" *ngIf="topSymptoms.length > 1">
+      <h3 class="ranking-title">Tus síntomas más frecuentes</h3>
+
+      <div class="ranking-item" *ngFor="let symptom of topSymptoms">
+        <span class="ranking-position">{{ symptom.position }}</span>
+
+        <div class="ranking-info">
+          <div class="ranking-top">
+            <strong>{{ symptom.name }}</strong>
+            <span>
+              {{ symptom.count }} {{ symptom.count === 1 ? 'vez' : 'veces' }}
+            </span>
+          </div>
+
+          <div class="ranking-bar">
+            <span [style.width.%]="symptom.percent"></span>
+          </div>
+        </div>
       </div>
     </div>
 

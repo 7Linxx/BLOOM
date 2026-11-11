@@ -87,6 +87,11 @@
       </span>
     </div>
 
+    <!-- ERROR AL CARGAR LOS ARTÍCULOS -->
+    <p class="articles-message error" role="alert" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </p>
+
     <div class="articles-grid" *ngIf="filteredArticles.length > 0">
 
       <article
@@ -137,7 +142,20 @@
           </div>
 
           <div class="article-actions">
+            <button
+              type="button"
+              class="read-here-button"
+              *ngIf="article.content"
+              [class.active]="expandedArticleId === article.id"
+              [attr.aria-expanded]="expandedArticleId === article.id"
+              (click)="toggleContent(article.id)"
+            >
+              {{ expandedArticleId === article.id ? 'Ocultar artículo' : 'Leer artículo completo' }}
+              <span>{{ expandedArticleId === article.id ? '↑' : '↓' }}</span>
+            </button>
+
             <a
+              *ngIf="article.url"
               class="read-article"
               [href]="article.url"
               target="_blank"
@@ -160,6 +178,18 @@
               </span>
             </button>
           </div>
+        </div>
+
+        <!-- CONTENIDO COMPLETO -->
+        <div
+          class="article-full"
+          *ngIf="expandedArticleId === article.id && article.content"
+        >
+          <span class="section-kicker">ARTÍCULO COMPLETO</span>
+
+          <p *ngFor="let paragraph of getParagraphs(article)">
+            {{ paragraph }}
+          </p>
         </div>
 
         <!-- COMENTARIOS -->
@@ -201,30 +231,106 @@
                   <span>{{ formatDate(comment.createdAt) }}</span>
                 </div>
 
-                <p>{{ comment.message }}</p>
+                <!-- VER -->
+                <p *ngIf="editingCommentId !== comment.id">{{ comment.message }}</p>
+
+                <!-- EDITAR -->
+                <div class="comment-edit" *ngIf="editingCommentId === comment.id">
+                  <textarea
+                    rows="3"
+                    maxlength="500"
+                    [(ngModel)]="editDraft"
+                    [attr.aria-label]="'Editar tu comentario'"
+                  ></textarea>
+
+                  <div class="comment-edit-actions">
+                    <button
+                      type="button"
+                      class="comment-action-button"
+                      (click)="cancelEdit()"
+                    >
+                      Cancelar
+                    </button>
+
+                    <button
+                      type="button"
+                      class="comment-action-button primary"
+                      [disabled]="!editDraft.trim() || savingEdit"
+                      (click)="saveEdit(article.id, comment)"
+                    >
+                      {{ savingEdit ? 'Guardando...' : 'Guardar' }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- ACCIONES SOLO EN MIS COMENTARIOS -->
+                <div
+                  class="comment-actions"
+                  *ngIf="isMine(comment) && editingCommentId !== comment.id && deletingCommentId !== comment.id"
+                >
+                  <button
+                    type="button"
+                    class="comment-action-button"
+                    (click)="startEdit(comment)"
+                  >
+                    ✎ Editar
+                  </button>
+
+                  <button
+                    type="button"
+                    class="comment-action-button danger"
+                    (click)="askDelete(comment.id)"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+
+                <!-- CONFIRMAR ELIMINAR -->
+                <div class="comment-delete-confirm" *ngIf="deletingCommentId === comment.id">
+                  <span>¿Eliminar tu comentario?</span>
+
+                  <div class="comment-edit-actions">
+                    <button
+                      type="button"
+                      class="comment-action-button"
+                      (click)="cancelDelete()"
+                    >
+                      No
+                    </button>
+
+                    <button
+                      type="button"
+                      class="comment-action-button danger"
+                      (click)="confirmDelete(article.id, comment)"
+                    >
+                      Sí, eliminar
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
           </div>
+
+          <!-- MENSAJE DE ERROR O CONFIRMACIÓN -->
+          <p
+            class="articles-message"
+            *ngIf="commentMessage && commentMessage.articleId === article.id"
+            [class.ok]="commentMessage.tipo === 'ok'"
+            [class.error]="commentMessage.tipo === 'error'"
+            [attr.role]="commentMessage.tipo === 'error' ? 'alert' : 'status'"
+          >
+            {{ commentMessage.texto }}
+          </p>
 
           <!-- FORMULARIO DE COMENTARIO -->
           <form
             class="comment-form"
             (ngSubmit)="addComment(article.id)"
           >
-            <label for="nickname-{{ article.id }}">
-              Tu apodo
-            </label>
-
-            <input
-              id="nickname-{{ article.id }}"
-              type="text"
-              name="nickname-{{ article.id }}"
-              placeholder="¿Cómo te gustaría aparecer?"
-              maxlength="30"
-              [(ngModel)]="nickname"
-              required
-            />
+            <p class="comment-as" *ngIf="commentAuthor">
+              Comentarás como <strong>{{ commentAuthor }}</strong>
+            </p>
 
             <label for="comment-{{ article.id }}">
               Escribe tu comentario
@@ -245,9 +351,9 @@
 
               <button
                 type="submit"
-                [disabled]="!nickname.trim() || !commentDraft.trim()"
+                [disabled]="!commentDraft.trim() || sendingComment"
               >
-                Publicar comentario
+                {{ sendingComment ? 'Publicando...' : 'Publicar comentario' }}
                 <span>♡</span>
               </button>
             </div>
@@ -260,7 +366,7 @@
     </div>
 
     <!-- SIN RESULTADOS -->
-    <div class="no-results" *ngIf="filteredArticles.length === 0">
+    <div class="no-results" *ngIf="filteredArticles.length === 0 && !errorMessage">
       <span>❀</span>
       <h3>No encontramos artículos</h3>
       <p>Intenta con otra búsqueda o selecciona una categoría diferente.</p>

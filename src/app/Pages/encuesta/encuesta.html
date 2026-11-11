@@ -24,7 +24,7 @@
           <span class="section-number">01</span>
           <div>
             <h2>Sobre ti</h2>
-            <p>Algunos datos para conocerte mejor.</p>
+            <p>Necesitamos estos datos para conocerte mejor.</p>
           </div>
         </div>
 
@@ -100,210 +100,191 @@
           <span class="section-number">02</span>
           <div>
             <h2>Conozcamos tu ciclo</h2>
-            <p>
-              Comparte lo que recuerdes. No tienes que completar los datos que
-              desconozcas.
-            </p>
+            <p>Elige la opción que mejor se ajuste a lo que recuerdas.</p>
           </div>
         </div>
 
-        <div class="survey-field" [class.invalid]="cicloError">
-          <label for="duracionCiclo">
-            ¿Cuántos días dura normalmente tu ciclo?
-          </label>
-
-          <p class="survey-hint">
-            Desde el primer día de una menstruación hasta el día anterior a la
-            siguiente.
+        <!-- SELECTOR DE OPCIÓN -->
+        <div class="mode-group" [class.invalid]="modoError">
+          <p id="modo-title" class="mode-question">
+            ¿Cómo prefieres contarnos sobre tu ciclo?
           </p>
 
-          <div class="input-unit">
-            <input
-              id="duracionCiclo"
-              type="number"
-              [attr.aria-invalid]="cicloError ? 'true' : null"
-              formControlName="duracionCiclo"
-              placeholder="Ej. 28"
-              min="15"
-              max="60"
-            />
-            <span>días</span>
-          </div>
+          <div class="mode-options" role="radiogroup" aria-labelledby="modo-title">
+            @for (option of opcionesCiclo; track option.value) {
+              <label
+                class="option-card"
+                [class.selected]="modo === option.value"
+              >
+                <input
+                  type="radio"
+                  formControlName="modo"
+                  [value]="option.value"
+                />
 
-          @if (cicloError) {
-            <small class="survey-error" role="alert">{{ cicloError }}</small>
-          }
-        </div>
+                <span class="radio-indicator"></span>
 
-        <div class="survey-field" [class.invalid]="periodoError">
-          <label for="duracionPeriodo">
-            ¿Cuántos días dura normalmente tu menstruación?
-          </label>
-
-          <div class="input-unit">
-            <input
-              id="duracionPeriodo"
-              type="number"
-              [attr.aria-invalid]="periodoError ? 'true' : null"
-              formControlName="duracionPeriodo"
-              placeholder="Ej. 5"
-              min="1"
-              max="14"
-            />
-            <span>días</span>
-          </div>
-
-          @if (periodoError) {
-            <small class="survey-error" role="alert">{{ periodoError }}</small>
-          }
-        </div>
-
-        <div class="cycles">
-          <div class="cycles-heading">
-            <div>
-              <h3>Últimas menstruaciones</h3>
-              <p>Registra hasta tres fechas, comenzando por la más reciente.</p>
-            </div>
-
-            <span class="optional-tag">Opcional</span>
-          </div>
-
-          <div formArrayName="ciclos" class="cycle-list">
-            @for (cycle of ciclos.controls; track $index; let i = $index) {
-              <div class="cycle-card" [formGroupName]="i">
-                <div class="cycle-top">
-                  <h4>{{ cycleName(i) }}</h4>
-
-                  @if (ciclos.length > 1) {
-                    <button
-                      type="button"
-                      class="remove-cycle"
-                      (click)="removeCycle(i)"
-                      aria-label="Eliminar menstruación"
-                    >
-                      ✕
-                    </button>
-                  }
-                </div>
-
-                <div class="cycle-grid">
-                  <div class="survey-field" [class.invalid]="cycleError(i, 'inicio')">
-                    <label [for]="'inicio-' + i">Fecha de inicio</label>
-
-                    <input
-                      [id]="'inicio-' + i"
-                      type="date"
-                      formControlName="inicio"
-                      [max]="today"
-                    />
-
-                    @if (cycleError(i, 'inicio')) {
-                      <small class="survey-error" role="alert">
-                        {{ cycleError(i, 'inicio') }}
-                      </small>
-                    }
-                  </div>
-
-                  <div class="survey-field" [class.invalid]="cycleError(i, 'fin')">
-                    <label [for]="'fin-' + i">Fecha de finalización</label>
-
-                    <input
-                      [id]="'fin-' + i"
-                      type="date"
-                      formControlName="fin"
-                      [max]="today"
-                    />
-
-                    @if (cycleError(i, 'fin')) {
-                      <small class="survey-error" role="alert">
-                        {{ cycleError(i, 'fin') }}
-                      </small>
-                    }
-                  </div>
-                </div>
-              </div>
+                <span class="option-content">
+                  <strong>{{ option.label }}</strong>
+                  <small>{{ option.description }}</small>
+                </span>
+              </label>
             }
           </div>
 
-          @if (ciclos.length < maxCycles) {
-            <button
-              type="button"
-              class="add-cycle"
-              (click)="addCycle()"
-            >
-              <span>＋</span>
-              Agregar otra menstruación
-            </button>
+          @if (modoError) {
+            <small class="survey-error" role="alert">{{ modoError }}</small>
           }
         </div>
-      </section>
 
-      <!-- SÍNTOMAS -->
-      <section class="survey-group">
-        <div class="section-heading">
-          <span class="section-number">03</span>
-          <div>
-            <h2 id="sintomas-title">¿Qué síntomas sueles experimentar?</h2>
-            <p>Puedes seleccionar todas las opciones que correspondan.</p>
+        <!-- OPCIÓN 1: DURACIONES -->
+        @if (modo === 'duraciones') {
+          <div class="survey-grid">
+            <div class="survey-field" [class.invalid]="cicloError">
+              <label for="duracionCiclo">
+                ¿Cuántos días dura tu ciclo?
+              </label>
+
+              <p class="survey-hint">
+                Desde el primer día de una menstruación hasta el día anterior a la
+                siguiente.
+              </p>
+
+              <div class="input-unit">
+                <input
+                  id="duracionCiclo"
+                  type="number"
+                  [attr.aria-invalid]="cicloError ? 'true' : null"
+                  formControlName="duracionCiclo"
+                  placeholder="Ej. 28"
+                  min="15"
+                  max="60"
+                />
+                <span>días</span>
+              </div>
+
+              @if (cicloError) {
+                <small class="survey-error" role="alert">{{ cicloError }}</small>
+              }
+            </div>
+
+            <div class="survey-field" [class.invalid]="periodoError">
+              <label for="duracionPeriodo">
+                ¿Cuántos días dura tu menstruación?
+              </label>
+
+              <p class="survey-hint">
+                Los días en los que tienes sangrado.
+              </p>
+
+              <div class="input-unit">
+                <input
+                  id="duracionPeriodo"
+                  type="number"
+                  [attr.aria-invalid]="periodoError ? 'true' : null"
+                  formControlName="duracionPeriodo"
+                  placeholder="Ej. 5"
+                  min="1"
+                  max="15"
+                />
+                <span>días</span>
+              </div>
+
+              @if (periodoError) {
+                <small class="survey-error" role="alert">{{ periodoError }}</small>
+              }
+            </div>
           </div>
-        </div>
+        }
 
-        <div class="symptoms-grid" role="group" aria-labelledby="sintomas-title">
-          @for (symptom of sintomasDisponibles; track symptom) {
-            <label
-              class="choice-card symptom-choice"
-              [class.selected]="isSymptomSelected(symptom)"
-            >
-              <input
-                type="checkbox"
-                [checked]="isSymptomSelected(symptom)"
-                (change)="toggleSymptom(symptom, $any($event.target).checked)"
-              />
+        <!-- OPCIÓN 2: FECHAS -->
+        @if (modo === 'fechas') {
+          <div class="cycles">
+            <div class="cycles-heading">
+              <div>
+                <h3>Tus últimas menstruaciones</h3>
+                <p>
+                  Escribe la fecha de inicio y de finalización de una a tres
+                  menstruaciones, comenzando por la más reciente.
+                </p>
+              </div>
+            </div>
 
-              <span class="custom-checkbox"></span>
-              <span>{{ symptom }}</span>
-            </label>
-          }
-        </div>
-      </section>
+            <div formArrayName="ciclos" class="cycle-list">
+              @for (cycle of ciclos.controls; track $index; let i = $index) {
+                <div class="cycle-card" [formGroupName]="i">
+                  <div class="cycle-top">
+                    <h4>{{ cycleName(i) }}</h4>
 
-      <!-- FLUJO MENSTRUAL -->
-      <section class="survey-group">
-        <div class="section-heading">
-          <span class="section-number">04</span>
-          <div>
-            <h2 id="flujo-title">¿Cómo suele ser tu flujo menstrual?</h2>
-            <p>Selecciona la opción que mejor te describa.</p>
+                    @if (ciclos.length > 1) {
+                      <button
+                        type="button"
+                        class="remove-cycle"
+                        (click)="removeCycle(i)"
+                        aria-label="Eliminar menstruación"
+                      >
+                        ✕
+                      </button>
+                    }
+                  </div>
+
+                  <div class="cycle-grid">
+                    <div class="survey-field" [class.invalid]="cycleError(i, 'inicio')">
+                      <label [for]="'inicio-' + i">Fecha de inicio</label>
+
+                      <input
+                        [id]="'inicio-' + i"
+                        type="date"
+                        formControlName="inicio"
+                        [max]="today"
+                      />
+
+                      @if (cycleError(i, 'inicio')) {
+                        <small class="survey-error" role="alert">
+                          {{ cycleError(i, 'inicio') }}
+                        </small>
+                      }
+                    </div>
+
+                    <div class="survey-field" [class.invalid]="cycleError(i, 'fin')">
+                      <label [for]="'fin-' + i">Fecha de finalización</label>
+
+                      <input
+                        [id]="'fin-' + i"
+                        type="date"
+                        formControlName="fin"
+                        [max]="today"
+                      />
+
+                      @if (cycleError(i, 'fin')) {
+                        <small class="survey-error" role="alert">
+                          {{ cycleError(i, 'fin') }}
+                        </small>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+
+            @if (ciclos.length < maxCycles) {
+              <button
+                type="button"
+                class="add-cycle"
+                (click)="addCycle()"
+              >
+                <span>＋</span>
+                Agregar otra menstruación
+              </button>
+            }
           </div>
-        </div>
-
-        <div class="flow-options" role="radiogroup" aria-labelledby="flujo-title">
-          @for (flow of tiposFlujo; track flow.value) {
-            <label
-              class="flow-card"
-              [class.selected]="form.controls.flujoMenstrual.value === flow.value"
-            >
-              <input
-                type="radio"
-                formControlName="flujoMenstrual"
-                [value]="flow.value"
-              />
-
-              <span class="radio-indicator"></span>
-
-              <span class="flow-content">
-                <strong>{{ flow.label }}</strong>
-                <small>{{ flow.description }}</small>
-              </span>
-            </label>
-          }
-        </div>
+        }
       </section>
 
       <div class="survey-bottom">
         <p class="privacy-note">
           <span>♡</span>
-          Tu información es personal. Puedes omitir los datos que no conozcas.
+          Tu información es personal. Revisa que tus datos estén correctos antes de continuar.
         </p>
 
         @if (serverError()) {

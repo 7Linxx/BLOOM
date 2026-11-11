@@ -1,9 +1,20 @@
 import { Component, computed, inject, signal } from '@angular/core';
+
+import { BloomApi, mensajeDeError } from '../../Core/Services/bloom-api.service';
+import { Sesion } from '../../Core/Services/sesion.service';
+import { CicloActual, DiaCalendario, RegistroDiario } from '../../Core/modelos';
 import {
-  CycleService,
-  DayRecord,
-  MenstrualFlow,
-} from '../../Core/Services/cycle.service';
+  fechaATexto,
+  flujoBackendATexto,
+  flujoTextoABackend,
+  indicadorATipoDia,
+  nombresACatalogo,
+  registroANombres,
+  textoAFecha,
+} from '../../Core/mapeos';
+
+/** Solo los flujos que existen en el backend (el calendario no usa "variable" ni "no lo sé"). */
+type MenstrualFlow = 'ligero' | 'moderado' | 'abundante';
 
 type DayKind =
   | 'confirmed'
@@ -25,6 +36,29 @@ interface CalendarDay {
   cycleDay: number | null;
 }
 
+/** Lo que el panel "Día seleccionado" muestra de un día guardado. */
+interface SelectedRecord {
+  isPeriod: boolean;
+  symptoms: string[];
+  flow: MenstrualFlow | null;
+  note: string;
+}
+
+/** Mensaje que se muestra en pantalla: confirmación (ok), aviso o error. */
+interface Mensaje {
+  tipo: 'ok' | 'aviso' | 'error';
+  texto: string;
+}
+
+/**
+ * Calendario conectado al backend:
+ *  - Los colores de cada día vienen de GET /usuarias/{id}/calendario (indicador de cada día).
+ *    El backend manda un mes por llamada: se piden el mes anterior, el actual y el siguiente,
+ *    así los días de otros meses que se ven en la cuadrícula también salen con su color.
+ *  - El resumen (próxima menstruación, ovulación, día del ciclo) viene de GET /usuarias/{id}/ciclo-actual.
+ *  - Lo guardado en cada día viene de GET /usuarias/{id}/registros-diarios, y se guarda con POST/PUT/DELETE.
+ * Las predicciones ya NO se calculan aquí: las hace el backend (CicloMenstrualService).
+ */
 @Component({
   selector: 'app-calendar',
   standalone: true,
@@ -32,7 +66,8 @@ interface CalendarDay {
   styleUrl: './calendar.css',
 })
 export class Calendar {
-  private readonly cycleService = inject(CycleService);
+  private readonly api = inject(BloomApi);
+  private readonly sesion = inject(Sesion);
 
   readonly today = this.normalizeDate(new Date());
 
@@ -42,6 +77,7 @@ export class Calendar {
 
   readonly selectedDate = signal(this.today);
 
+  /** Solo síntomas que existen en el catálogo del backend (se quitó "Otros", que no se podía guardar). */
   readonly symptomsAvailable = [
     'Cólicos',
     'Dolor de cabeza',
@@ -54,9 +90,9 @@ export class Calendar {
     'Náuseas',
     'Antojos',
     'Insomnio',
-    'Otros',
   ];
 
+  /** Solo flujos que existen en el backend (se quitaron "Variable" y "No lo sé"). */
   readonly flowOptions: {
     value: MenstrualFlow;
     label: string;
@@ -64,14 +100,36 @@ export class Calendar {
     { value: 'ligero', label: 'Ligero' },
     { value: 'moderado', label: 'Moderado' },
     { value: 'abundante', label: 'Abundante' },
-    { value: 'variable', label: 'Variable' },
-    { value: 'no_se', label: 'No lo sé' },
   ];
 
   readonly isPeriodDraft = signal(false);
   readonly symptomsDraft = signal<string[]>([]);
   readonly flowDraft = signal<MenstrualFlow | null>(null);
   readonly noteDraft = signal('');
+
+  /** Mensaje de error o confirmación que se muestra en el editor del día (reemplaza a window.alert). */
+  readonly mensaje = signal<Mensaje | null>(null);
+
+  /** true mientras se guarda, para no enviar el día dos veces. */
+  readonly guardando = signal(false);
+
+  /** Días de los tres meses cargados (anterior, actual y siguiente), por fecha 'AAAA-MM-DD'. */
+  private readonly diasDelMes = signal<Record<string, DiaCalendario>>({});
+
+  /** Días registrados por la usuaria, por fecha 'AAAA-MM-DD'. */
+  private readonly registros = signal<Record<string, RegistroDiario>>({});
+
+  /** Ciclo actual con las predicciones del backend (null si todavía no hay ciclos). */
+  private readonly cicloActual = signal<CicloActual | null>(null);
+
+  /** Número de la última carga de meses: si la usuaria cambia de mes rápido, solo vale la más reciente. */
+  private cargaDeMes = 0;
+
+  constructor() {
+    this.cargarRegistros();
+    this.cargarMes();
+    this.cargarCicloActual();
+  }
 
   readonly monthLabel = computed(() =>
     this.currentMonth().toLocaleDateString('es-CO', {
@@ -80,62 +138,26 @@ export class Calendar {
     })
   );
 
-  readonly cycleLength = computed(() => {
-    return this.cycleService.getEstimatedCycleLength(
-      this.cycleService.getPeriodStarts()
-    );
-  });
+  readonly cycleLength = computed(() => this.cicloActual()?.duracionEstimada ?? 28);
 
-  readonly periodLength = computed(() =>
-    this.cycleService.getEstimatedPeriodLength()
-  );
+  readonly currentCycleDay = computed(() => this.cicloActual()?.diaDelCiclo ?? null);
 
-  readonly currentCycleDay = computed(() => {
-    const start = this.getLatestStart(this.today);
-
-    return start
-      ? this.daysBetween(start, this.today) + 1
-      : null;
-  });
-
-  readonly nextPeriod = computed(() => {
-    const start = this.getLatestStart(this.today);
-
-    return start
-      ? this.addDays(start, this.cycleLength())
-      : null;
-  });
-
+  /** Negativo = días de retraso (así lo muestra el HTML). */
   readonly daysUntilPeriod = computed(() => {
-    const next = this.nextPeriod();
-
-    return next
-      ? this.daysBetween(this.today, next)
-      : null;
-  });
-
-  readonly nextOvulation = computed(() => {
-    const start = this.getLatestStart(this.today);
-
-    if (!start) return null;
-
-    const ovulationDay = Math.max(10, this.cycleLength() - 14);
-
-    let date = this.addDays(start, ovulationDay - 1);
-
-    if (date < this.today) {
-      date = this.addDays(date, this.cycleLength());
-    }
-
-    return date;
+    const ciclo = this.cicloActual();
+    if (!ciclo) return null;
+    return ciclo.periodoRetrasado ? -ciclo.diasRetraso : ciclo.diasParaSiguientePeriodo;
   });
 
   readonly daysUntilOvulation = computed(() => {
-    const date = this.nextOvulation();
-
-    return date
-      ? this.daysBetween(this.today, date)
-      : null;
+    const ciclo = this.cicloActual();
+    if (!ciclo) return null;
+    let dias = this.daysBetween(this.today, textoAFecha(ciclo.fechaEstimadaOvulacion));
+    // Si la ovulación de este ciclo ya pasó, la próxima es en el siguiente ciclo.
+    if (dias < 0) {
+      dias += ciclo.duracionEstimada;
+    }
+    return dias;
   });
 
   readonly calendarDays = computed((): CalendarDay[] => {
@@ -146,14 +168,7 @@ export class Calendar {
     return Array.from({ length: 42 }, (_, index) => {
       const date = this.addDays(startDate, index);
       const key = this.dateKey(date);
-      const cycle = this.getCycleInfo(date);
-      const record = this.cycleService.records()[key];
-
-      const hasRecord = !!(
-        record?.note.trim() ||
-        record?.symptoms.length ||
-        record?.flow
-      );
+      const dia = this.diasDelMes()[key];
 
       return {
         date,
@@ -162,19 +177,23 @@ export class Calendar {
         currentMonth: date.getMonth() === firstDay.getMonth(),
         today: this.isSameDay(date, this.today),
         future: date > this.today,
-        hasRecord,
-        kind: cycle.kind,
-        cycleDay: cycle.cycleDay,
+        hasRecord: dia?.tieneRegistro ?? !!this.registros()[key],
+        kind: indicadorATipoDia(dia?.indicador),
+        cycleDay: dia?.diaDelCiclo ?? null,
       };
     });
   });
 
-  readonly selectedRecord = computed(() => {
-    return this.cycleService.records()[this.dateKey(this.selectedDate())] ?? {
-      isPeriod: false,
-      symptoms: [],
-      flow: null,
-      note: '',
+  readonly selectedRecord = computed((): SelectedRecord => {
+    const registro = this.registros()[this.dateKey(this.selectedDate())];
+    if (!registro) {
+      return { isPeriod: false, symptoms: [], flow: null, note: '' };
+    }
+    return {
+      isPeriod: registro.hayMenstruacion,
+      symptoms: this.nombresGuardados(registro),
+      flow: flujoBackendATexto(registro.tipoFlujo),
+      note: registro.nota ?? '',
     };
   });
 
@@ -184,7 +203,8 @@ export class Calendar {
 
   readonly selectedInfo = computed(() => {
     const date = this.selectedDate();
-    const cycle = this.getCycleInfo(date);
+    const dia = this.diasDelMes()[this.dateKey(date)];
+    const kind = indicadorATipoDia(dia?.indicador);
 
     const descriptions: Record<DayKind, string> = {
       confirmed: 'Menstruación registrada',
@@ -202,9 +222,9 @@ export class Calendar {
         month: 'long',
         year: 'numeric',
       }),
-      description: descriptions[cycle.kind],
-      cycleDay: cycle.cycleDay,
-      kind: cycle.kind,
+      description: descriptions[kind],
+      cycleDay: dia?.diaDelCiclo ?? null,
+      kind,
     };
   });
 
@@ -221,23 +241,20 @@ export class Calendar {
     this.currentMonth.update(month =>
       new Date(month.getFullYear(), month.getMonth() - 1, 1)
     );
+    this.cargarMes();
   }
 
   nextMonthView(): void {
     this.currentMonth.update(month =>
       new Date(month.getFullYear(), month.getMonth() + 1, 1)
     );
+    this.cargarMes();
   }
 
   selectDay(day: CalendarDay): void {
+    this.mensaje.set(null);
     this.selectedDate.set(day.date);
-
-    const record = this.cycleService.records()[day.key];
-
-    this.isPeriodDraft.set(record?.isPeriod ?? false);
-    this.symptomsDraft.set(record?.symptoms ?? []);
-    this.flowDraft.set(record?.flow ?? null);
-    this.noteDraft.set(record?.note ?? '');
+    this.cargarBorrador();
   }
 
   isSelected(day: CalendarDay): boolean {
@@ -260,95 +277,149 @@ export class Calendar {
     });
   }
 
-  saveSelectedDay(): void {
-    if (!this.canEditSelected()) return;
+  /**
+   * Guarda el día en el backend: POST si es nuevo, PUT si ya existía.
+   * Si se dejó todo vacío y el día existía, se elimina (DELETE).
+   * Después se recarga el mes y el ciclo, porque el backend recalcula los ciclos y las predicciones.
+   * Los errores y confirmaciones se muestran con la señal `mensaje` (ya no se usa window.alert).
+   */
+  async saveSelectedDay(): Promise<void> {
+    if (!this.canEditSelected() || this.guardando()) return;
 
-    const record: DayRecord = {
-      isPeriod: this.isPeriodDraft(),
-      symptoms: this.symptomsDraft(),
-      flow: this.flowDraft(),
-      note: this.noteDraft().trim(),
-    };
+    const fecha = this.dateKey(this.selectedDate());
+    const yaExiste = !!this.registros()[fecha];
+    const idUsuario = this.sesion.idUsuario;
 
-    this.cycleService.saveDay(
-      this.dateKey(this.selectedDate()),
-      record
+    this.mensaje.set(null);
+    this.guardando.set(true);
+
+    try {
+      const vacio = !this.isPeriodDraft() && this.symptomsDraft().length === 0 && !this.noteDraft().trim();
+      let noGuardados: string[] = [];
+
+      if (vacio) {
+        if (yaExiste) {
+          await this.api.eliminarRegistro(idUsuario, fecha);
+        }
+      } else {
+        const catalogos = await this.api.verCatalogos();
+        const traduccion = nombresACatalogo(this.symptomsDraft(), catalogos);
+        const registro: RegistroDiario = {
+          fecha,
+          hayMenstruacion: this.isPeriodDraft(),
+          tipoFlujo: this.isPeriodDraft() ? flujoTextoABackend(this.flowDraft()) : null,
+          nota: this.noteDraft().trim() || null,
+          sintomas: traduccion.sintomas,
+          emociones: traduccion.emociones,
+          actividadesSexuales: this.registros()[fecha]?.actividadesSexuales ?? [],
+        };
+        await this.api.guardarRegistro(idUsuario, registro, yaExiste);
+        noGuardados = traduccion.noGuardados;
+      }
+
+      await this.recargarTodo();
+
+      if (noGuardados.length > 0) {
+        this.mensaje.set({
+          tipo: 'aviso',
+          texto: 'Se guardó el día, pero estos síntomas no existen en Bloom: ' + noGuardados.join(', ') + '.',
+        });
+      } else if (vacio && yaExiste) {
+        this.mensaje.set({ tipo: 'ok', texto: 'Se eliminó la información de este día.' });
+      } else if (vacio) {
+        this.mensaje.set({ tipo: 'aviso', texto: 'No hay nada que guardar en este día.' });
+      } else {
+        this.mensaje.set({ tipo: 'ok', texto: 'Información guardada ♡' });
+      }
+    } catch (error) {
+      this.mensaje.set({
+        tipo: 'error',
+        texto: mensajeDeError(error, 'No se pudo guardar la información del día.'),
+      });
+    } finally {
+      this.guardando.set(false);
+    }
+  }
+
+  // ================================================================ CARGA DE DATOS
+
+  private async recargarTodo(): Promise<void> {
+    await this.cargarRegistros();
+    await this.cargarMes();
+    await this.cargarCicloActual();
+  }
+
+  /** GET /registros-diarios: todos los días registrados. */
+  private async cargarRegistros(): Promise<void> {
+    try {
+      const lista = await this.api.verRegistros(this.sesion.idUsuario);
+      const mapa: Record<string, RegistroDiario> = {};
+      for (const registro of lista) {
+        mapa[registro.fecha] = registro;
+      }
+      this.registros.set(mapa);
+      this.cargarBorrador();
+    } catch {
+      this.registros.set({});
+    }
+  }
+
+  /**
+   * GET /calendario del mes que se está viendo y también del anterior y el siguiente
+   * (el backend manda un mes por llamada), para que los días de otros meses que aparecen
+   * en la cuadrícula también tengan su color. Si falla algún mes, los demás se muestran igual.
+   */
+  private async cargarMes(): Promise<void> {
+    const carga = ++this.cargaDeMes;
+    const mes = this.currentMonth();
+    const meses = [
+      new Date(mes.getFullYear(), mes.getMonth() - 1, 1),
+      mes,
+      new Date(mes.getFullYear(), mes.getMonth() + 1, 1),
+    ];
+
+    const resultados = await Promise.allSettled(
+      meses.map(m => this.api.verCalendario(this.sesion.idUsuario, m.getFullYear(), m.getMonth() + 1))
     );
-  }
 
-  private getCycleInfo(date: Date): {
-    kind: DayKind;
-    cycleDay: number | null;
-  } {
-    const key = this.dateKey(date);
-    const record = this.cycleService.records()[key];
+    // Si mientras tanto cambió de mes, esta respuesta ya no sirve.
+    if (carga !== this.cargaDeMes) return;
 
-    if (record?.isPeriod) {
-      return {
-        kind: 'confirmed',
-        cycleDay: this.getCycleDay(date),
-      };
-    }
-
-    const start = this.getLatestStart(date);
-
-    if (!start) {
-      return { kind: 'none', cycleDay: null };
-    }
-
-    const cycleLength = this.cycleLength();
-    const periodLength = this.periodLength();
-
-    const difference = this.daysBetween(start, date);
-    const cycleDay = difference + 1;
-    const nextStart = this.addDays(start, cycleLength);
-
-    if (date >= nextStart) {
-      if (date <= this.today) {
-        return { kind: 'late', cycleDay };
+    const mapa: Record<string, DiaCalendario> = {};
+    for (const resultado of resultados) {
+      if (resultado.status === 'fulfilled') {
+        for (const dia of resultado.value.dias) {
+          mapa[dia.fecha] = dia;
+        }
       }
-
-      const predictedEnd = this.addDays(nextStart, periodLength - 1);
-
-      if (date <= predictedEnd) {
-        return { kind: 'predicted', cycleDay };
-      }
-
-      return { kind: 'none', cycleDay };
     }
-
-    const ovulationDay = Math.max(10, cycleLength - 14);
-
-    if (cycleDay === ovulationDay) {
-      return { kind: 'ovulation', cycleDay };
-    }
-
-    if (
-      cycleDay >= ovulationDay - 5 &&
-      cycleDay < ovulationDay
-    ) {
-      return { kind: 'fertile', cycleDay };
-    }
-
-    return { kind: 'none', cycleDay };
+    this.diasDelMes.set(mapa);
   }
 
-  private getLatestStart(date: Date): Date | null {
-    const starts = this.cycleService.getPeriodStarts()
-      .filter(start => start <= date);
-
-    return starts.length
-      ? starts[starts.length - 1]
-      : null;
+  /** GET /ciclo-actual (predicciones del backend). */
+  private async cargarCicloActual(): Promise<void> {
+    try {
+      this.cicloActual.set(await this.api.verCicloActual(this.sesion.idUsuario));
+    } catch {
+      this.cicloActual.set(null);
+    }
   }
 
-  private getCycleDay(date: Date): number | null {
-    const start = this.getLatestStart(date);
-
-    return start
-      ? this.daysBetween(start, date) + 1
-      : null;
+  /** Llena el editor con lo guardado en el día seleccionado. */
+  private cargarBorrador(): void {
+    const guardado = this.selectedRecord();
+    this.isPeriodDraft.set(guardado.isPeriod);
+    this.symptomsDraft.set(guardado.symptoms);
+    this.flowDraft.set(guardado.flow);
+    this.noteDraft.set(guardado.note);
   }
+
+  /** Nombres de síntomas/emociones guardados, con los nombres que usa esta página. */
+  private nombresGuardados(registro: RegistroDiario): string[] {
+    return registroANombres(registro, this.symptomsAvailable);
+  }
+
+  // ================================================================ FECHAS
 
   private normalizeDate(date: Date): Date {
     return new Date(
@@ -383,10 +454,6 @@ export class Calendar {
   }
 
   private dateKey(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-
-    return `${year}-${month}-${day}`;
+    return fechaATexto(date);
   }
 }

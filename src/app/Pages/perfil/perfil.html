@@ -37,7 +37,14 @@
       </span>
     </div>
 
-    
+    <button
+      type="button"
+      class="edit-summary-button"
+      (click)="logout()"
+    >
+      <span>↪</span>
+      Cerrar sesión
+    </button>
   </section>
 
   <!-- MENSAJES -->
@@ -62,6 +69,7 @@
 
       <span class="section-decoration">♡</span>
     </div>
+
     <!-- RESUMEN COMPACTO CUANDO EL FORMULARIO ESTÁ CERRADO -->
     <div class="profile-card compact-profile-card" *ngIf="!editing">
       <div class="compact-card-heading">
@@ -116,6 +124,7 @@
         </div>
       </div>
     </div>
+
     <div class="profile-card" *ngIf="editing">
 
       <div class="card-heading">
@@ -123,7 +132,10 @@
 
         <div>
           <h3>Datos personales</h3>
-          <p>Tu información es personal y puedes actualizarla.</p>
+          <p>
+            Puedes actualizar tu apodo, peso y altura. Tu nombre, fecha de
+            nacimiento y correo están protegidos y no se pueden cambiar aquí.
+          </p>
         </div>
       </div>
 
@@ -131,50 +143,56 @@
 
         <div class="form-field">
           <label for="primerNombre">Primer nombre</label>
-          <input
-            id="primerNombre"
-            type="text"
-            [(ngModel)]="profile.primerNombre"
-            [disabled]="!editing"
-            maxlength="40"
-            placeholder="Tu primer nombre"
-          />
+          <div class="readonly-field">
+            <input
+              id="primerNombre"
+              type="text"
+              [value]="profile.primerNombre"
+              disabled
+            />
+            <span class="lock-icon">♧</span>
+          </div>
         </div>
 
         <div class="form-field">
           <label for="segundoNombre">Segundo nombre</label>
-          <input
-            id="segundoNombre"
-            type="text"
-            [(ngModel)]="profile.segundoNombre"
-            [disabled]="!editing"
-            maxlength="40"
-            placeholder="Tu segundo nombre"
-          />
+          <div class="readonly-field">
+            <input
+              id="segundoNombre"
+              type="text"
+              [value]="profile.segundoNombre"
+              placeholder="Sin registrar"
+              disabled
+            />
+            <span class="lock-icon">♧</span>
+          </div>
         </div>
 
         <div class="form-field">
           <label for="primerApellido">Primer apellido</label>
-          <input
-            id="primerApellido"
-            type="text"
-            [(ngModel)]="profile.primerApellido"
-            [disabled]="!editing"
-            maxlength="40"
-            placeholder="Tu primer apellido"
-          />
+          <div class="readonly-field">
+            <input
+              id="primerApellido"
+              type="text"
+              [value]="profile.primerApellido"
+              disabled
+            />
+            <span class="lock-icon">♧</span>
+          </div>
         </div>
 
         <div class="form-field">
           <label for="segundoApellido">Segundo apellido</label>
-          <input
-            id="segundoApellido"
-            type="text"
-            [(ngModel)]="profile.segundoApellido"
-            [disabled]="!editing"
-            maxlength="40"
-            placeholder="Tu segundo apellido"
-          />
+          <div class="readonly-field">
+            <input
+              id="segundoApellido"
+              type="text"
+              [value]="profile.segundoApellido"
+              placeholder="Sin registrar"
+              disabled
+            />
+            <span class="lock-icon">♧</span>
+          </div>
         </div>
 
         <div class="form-field">
@@ -184,7 +202,6 @@
             id="apodo"
             type="text"
             [(ngModel)]="profile.apodo"
-            [disabled]="!editing"
             maxlength="30"
             placeholder="¿Cómo quieres que te llamemos?"
           />
@@ -197,12 +214,15 @@
         <div class="form-field">
           <label for="fechaNacimiento">Fecha de nacimiento</label>
 
-          <input
-            id="fechaNacimiento"
-            type="date"
-            [(ngModel)]="profile.fechaNacimiento"
-            [disabled]="!editing"
-          />
+          <div class="readonly-field">
+            <input
+              id="fechaNacimiento"
+              type="date"
+              [value]="profile.fechaNacimiento"
+              disabled
+            />
+            <span class="lock-icon">♧</span>
+          </div>
         </div>
 
         <div class="form-field">
@@ -212,9 +232,9 @@
             <input
               id="email"
               type="email"
-              [(ngModel)]="profile.email"
-              disabled
+              [value]="profile.email"
               placeholder="Correo vinculado a tu cuenta"
+              disabled
             />
 
             <span class="lock-icon">♧</span>
@@ -250,7 +270,6 @@
             max="500"
             step="0.1"
             [(ngModel)]="profile.pesoKg"
-            [disabled]="!editing"
             placeholder="Ej. 58.5"
           />
         </div>
@@ -265,7 +284,6 @@
             max="250"
             step="0.1"
             [(ngModel)]="profile.alturaCm"
-            [disabled]="!editing"
             placeholder="Ej. 165"
           />
         </div>
@@ -390,6 +408,99 @@
       </div>
 
     </div>
+
+    <!-- DATOS DEL CICLO Y SUEÑO -->
+    <div class="preference-card cycle-data-card">
+
+      <div class="preference-intro">
+        <div class="preference-icon">☾</div>
+
+        <div>
+          <h3>Mis datos de ciclo y sueño</h3>
+          <p>
+            La duración del ciclo y de la menstruación se usan cuando eliges
+            la duración fija. Puedes cambiarlas cuando quieras.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="feedback inline-feedback"
+        *ngIf="cycleSettingsMessage"
+        [class.success-message]="cycleSettingsMessage.tipo === 'ok'"
+        [class.error-message]="cycleSettingsMessage.tipo === 'error'"
+        [attr.role]="cycleSettingsMessage.tipo === 'error' ? 'alert' : 'status'"
+      >
+        <span>{{ cycleSettingsMessage.tipo === 'ok' ? '♡' : '!' }}</span>
+        {{ cycleSettingsMessage.texto }}
+      </div>
+
+      <div class="profile-form three-columns">
+
+        <div class="form-field">
+          <label for="horasSueno">Horas de sueño</label>
+          <input
+            id="horasSueno"
+            type="number"
+            min="0"
+            max="24"
+            step="0.5"
+            [(ngModel)]="cycleSettings.horasSueno"
+            placeholder="Ej. 8"
+          />
+          <span class="field-hint">Promedio de horas que duermes por noche.</span>
+        </div>
+
+        <div class="form-field">
+          <label for="duracionCiclo">Duración del ciclo (días)</label>
+          <input
+            id="duracionCiclo"
+            type="number"
+            min="15"
+            max="60"
+            step="1"
+            [(ngModel)]="cycleSettings.duracionCiclo"
+            placeholder="Ej. 28"
+          />
+          <span class="field-hint">Del primer día de una menstruación a la siguiente.</span>
+        </div>
+
+        <div class="form-field">
+          <label for="duracionMenstruacion">Duración de la menstruación (días)</label>
+          <input
+            id="duracionMenstruacion"
+            type="number"
+            min="1"
+            max="15"
+            step="1"
+            [(ngModel)]="cycleSettings.duracionMenstruacion"
+            placeholder="Ej. 5"
+          />
+          <span class="field-hint">Cuántos días suele durar tu sangrado.</span>
+        </div>
+
+      </div>
+
+      <div class="form-actions">
+        <button
+          type="button"
+          class="cancel-button"
+          (click)="resetCycleSettings()"
+        >
+          Deshacer cambios
+        </button>
+
+        <button
+          type="button"
+          class="save-button"
+          (click)="saveCycleSettings()"
+        >
+          Guardar datos
+          <span>♡</span>
+        </button>
+      </div>
+
+    </div>
   </section>
 
   <!-- AJUSTES -->
@@ -467,8 +578,169 @@
           <p>
             Desactivar una opción significa que no autorizas compartir
             ese tipo de información. Tus registros personales no se
-            eliminan ni se modifican.
+            eliminan ni se modifican. Por ahora, estas preferencias se
+            guardan solo en este navegador, no en tu cuenta.
           </p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SEGURIDAD Y CUENTA -->
+  <section class="profile-section">
+    <div class="section-heading">
+      <div>
+        <span class="section-kicker">04 · SEGURIDAD</span>
+        <h2>Contraseña y cuenta</h2>
+        <p>Cuida el acceso a tu espacio personal.</p>
+      </div>
+
+      <span class="section-decoration">♧</span>
+    </div>
+
+    <!-- CAMBIAR CONTRASEÑA -->
+    <div class="profile-card">
+
+      <div class="card-heading">
+        <div class="card-icon">♧</div>
+
+        <div>
+          <h3>Cambiar contraseña</h3>
+          <p>Usa una contraseña de al menos 8 caracteres que no uses en otros sitios.</p>
+        </div>
+      </div>
+
+      <div
+        class="feedback inline-feedback"
+        *ngIf="passwordMessage"
+        [class.success-message]="passwordMessage.tipo === 'ok'"
+        [class.error-message]="passwordMessage.tipo === 'error'"
+        [attr.role]="passwordMessage.tipo === 'error' ? 'alert' : 'status'"
+      >
+        <span>{{ passwordMessage.tipo === 'ok' ? '♡' : '!' }}</span>
+        {{ passwordMessage.texto }}
+      </div>
+
+      <div class="profile-form three-columns">
+
+        <div class="form-field">
+          <label for="passwordActual">Contraseña actual</label>
+          <input
+            id="passwordActual"
+            type="password"
+            autocomplete="current-password"
+            [(ngModel)]="passwordForm.actual"
+            placeholder="Tu contraseña actual"
+          />
+        </div>
+
+        <div class="form-field">
+          <label for="passwordNueva">Nueva contraseña</label>
+          <input
+            id="passwordNueva"
+            type="password"
+            autocomplete="new-password"
+            [(ngModel)]="passwordForm.nueva"
+            placeholder="Mínimo 8 caracteres"
+          />
+        </div>
+
+        <div class="form-field">
+          <label for="passwordConfirmar">Confirmar nueva contraseña</label>
+          <input
+            id="passwordConfirmar"
+            type="password"
+            autocomplete="new-password"
+            [(ngModel)]="passwordForm.confirmar"
+            placeholder="Repite la nueva contraseña"
+          />
+        </div>
+
+      </div>
+
+      <div class="form-actions">
+        <button
+          type="button"
+          class="save-button"
+          [disabled]="changingPassword"
+          (click)="changePassword()"
+        >
+          {{ changingPassword ? 'Guardando...' : 'Cambiar contraseña' }}
+          <span>♡</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ELIMINAR CUENTA -->
+    <div class="profile-card danger-card">
+
+      <div class="card-heading">
+        <div class="card-icon danger-icon">!</div>
+
+        <div>
+          <h3>Eliminar mi cuenta</h3>
+          <p>
+            Esta acción es definitiva: se eliminará tu cuenta y no podrás
+            recuperar tu información.
+          </p>
+        </div>
+      </div>
+
+      <div class="form-actions danger-actions" *ngIf="deleteStep === 'closed'">
+        <button
+          type="button"
+          class="danger-button"
+          (click)="openDelete()"
+        >
+          Eliminar cuenta
+        </button>
+      </div>
+
+      <div class="delete-confirm" *ngIf="deleteStep === 'confirm'">
+
+        <div
+          class="feedback inline-feedback error-message"
+          *ngIf="deleteMessage"
+          role="alert"
+        >
+          <span>!</span>
+          {{ deleteMessage.texto }}
+        </div>
+
+        <div class="form-field">
+          <label for="deleteText">
+            Para confirmar, escribe <strong>ELIMINAR</strong>
+          </label>
+
+          <input
+            id="deleteText"
+            type="text"
+            autocomplete="off"
+            [(ngModel)]="deleteText"
+            placeholder="ELIMINAR"
+          />
+        </div>
+
+        <div class="form-actions">
+          <button
+            type="button"
+            class="cancel-button"
+            (click)="cancelDelete()"
+          >
+            Mejor no
+          </button>
+
+          <button
+            type="button"
+            class="danger-button solid"
+            [disabled]="!canDeleteAccount"
+            (click)="deleteAccount()"
+          >
+            {{ deletingAccount ? 'Eliminando...' : 'Sí, eliminar mi cuenta' }}
+          </button>
         </div>
 
       </div>

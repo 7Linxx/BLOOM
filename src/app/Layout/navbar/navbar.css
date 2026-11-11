@@ -98,7 +98,14 @@
     width: 100%;
   }
 }
-
+:where(.menu-logout) {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
 @media (max-width: 480px) {
   .navbar {
     padding: 10px 14px;
