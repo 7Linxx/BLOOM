@@ -1,11 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Playfair+Display:ital,wght@1,500;1,600&display=swap');
 
-/* =====================================================
-   1. VARIABLES GLOBALES
-===================================================== */
-
 :root {
-  /* Paleta principal */
   --c-crimson: #c8174f;
   --c-crimson-dark: #a3103e;
   --c-rose: #ff8fa3;
@@ -15,7 +10,6 @@
   --c-cream: #fff7fa;
   --c-white: #ffffff;
 
-  /* Colores complementarios */
   --c-butter: #fff6b0;
   --c-butter-dark: #f2d96b;
   --butter: #fff0b8;
@@ -26,7 +20,6 @@
   --peach-deep: #f08a5d;
   --sage: #cfe8d5;
 
-  /* Escala rosa */
   --rose-700: #b3245f;
   --rose-600: #d63a77;
   --rose-500: #e8548a;
@@ -36,20 +29,17 @@
   --rose-100: #ffe3ec;
   --rose-50: #fff2f6;
 
-  /* Texto */
   --c-text: #4a1c2c;
   --c-text-soft: #8a5a6b;
   --ink: #5c1c37;
   --ink-soft: #9b6479;
   --ink-on-rose: #ffffff;
 
-  /* Estados */
   --c-success: #5cb85c;
   --c-error: #e0436a;
   --c-warn: #f0b429;
   --c-hint: #ffd84d;
 
-  /* Fondos y superficies */
   --bg: #fff5f3;
   --bg-soft: #ffe9ee;
   --surface: rgba(255, 255, 255, 0.85);
@@ -60,12 +50,10 @@
   --field-bg: #ffd3e0;
   --field-bg-focus: #ffe4ec;
 
-  /* Tipografías */
   --font-display: 'Fredoka', 'Nunito', system-ui, sans-serif;
   --font-body: 'Nunito', system-ui, sans-serif;
   --font-accent: 'Playfair Display', Georgia, serif;
 
-  /* Espaciados */
   --sp-xs: 4px;
   --sp-sm: 8px;
   --sp-md: 16px;
@@ -73,19 +61,16 @@
   --sp-xl: 40px;
   --sp-2xl: 64px;
 
-  /* Bordes */
   --r-sm: 6px;
   --r-md: 12px;
   --r-lg: 20px;
   --r-xl: 32px;
   --r-full: 999px;
 
-  /* Compatibilidad con nombres anteriores */
   --radius-sm: var(--r-md);
   --radius-md: 18px;
   --radius-lg: 28px;
 
-  /* Sombras */
   --shadow-sm: 0 2px 8px rgba(200, 23, 79, 0.10);
   --shadow-md: 0 6px 24px rgba(200, 23, 79, 0.14);
   --shadow-lg: 0 12px 48px rgba(200, 23, 79, 0.20);
@@ -95,7 +80,6 @@
   --shadow-glow: 0 0 30px rgba(255, 143, 163, 0.55);
   --shadow-sun: 0 0 20px rgba(255, 216, 77, 0.65);
 
-  /* Transiciones */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 
@@ -103,14 +87,12 @@
   --t-med: 0.3s;
   --t-slow: 0.5s;
 
-  /* Indicadores */
   --ind-predicted: var(--rose-300);
   --ind-confirmed: var(--rose-500);
   --ind-fertile: var(--lilac);
   --ind-ovulation: var(--lilac-deep);
   --ind-late: var(--peach-deep);
 
-  /* Compatibilidad con futuras clases */
   --color-primary: var(--c-crimson);
   --color-primary-dark: var(--c-crimson-dark);
   --color-secondary: var(--c-rose);
@@ -124,10 +106,6 @@
   --color-warning: var(--c-warn);
   --color-info: var(--rose-500);
 }
-
-/* =====================================================
-   2. CONFIGURACIÓN GENERAL
-===================================================== */
 
 *,
 *::before,
@@ -218,8 +196,6 @@ svg {
   stroke-linejoin: round;
 }
 
-/* Utilidades */
-
 .hidden {
   display: none !important;
 }
@@ -231,10 +207,6 @@ svg {
 .w-full {
   width: 100%;
 }
-
-/* =====================================================
-   3. SCROLLBAR
-===================================================== */
 
 * {
   scrollbar-width: thin;
@@ -259,10 +231,6 @@ svg {
   background: var(--c-rose);
 }
 
-/* =====================================================
-   4. ACCESIBILIDAD
-===================================================== */
-
 :focus-visible {
   outline: 3px solid var(--rose-400);
   outline-offset: 3px;
@@ -272,10 +240,6 @@ button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
-
-/* =====================================================
-   5. BOTONES
-===================================================== */
 
 .btn-primary {
   display: inline-flex;
@@ -396,10 +360,6 @@ button:disabled {
   transform: translateY(-1px);
 }
 
-/* =====================================================
-   6. CAMPOS DE FORMULARIO
-===================================================== */
-
 .field {
   display: flex;
   flex-direction: column;
@@ -474,10 +434,6 @@ button:disabled {
   font-weight: 700;
 }
 
-/* =====================================================
-   7. CONTRASEÑAS
-===================================================== */
-
 .pw-wrap {
   position: relative;
   width: 100%;
@@ -508,10 +464,6 @@ button:disabled {
 .pw-toggle:hover {
   background: rgba(232, 84, 138, 0.12);
 }
-
-/* =====================================================
-   8. MODALES
-===================================================== */
 
 .modal-overlay {
   position: fixed;
@@ -563,10 +515,6 @@ button:disabled {
   gap: var(--sp-md);
 }
 
-/* =====================================================
-   9. NOTIFICACIONES TOAST
-===================================================== */
-
 .toast-container {
   position: fixed;
   right: var(--sp-lg);
@@ -607,10 +555,6 @@ button:disabled {
 .toast.info {
   border-color: var(--c-rose);
 }
-
-/* =====================================================
-   10. ANIMACIONES
-===================================================== */
 
 @keyframes fadeIn {
   from {
@@ -682,10 +626,6 @@ button:disabled {
 .float-anim {
   animation: float 4s ease-in-out infinite;
 }
-
-/* =====================================================
-   11. AUTENTICACIÓN
-===================================================== */
 
 .auth-page {
   position: relative;
@@ -871,10 +811,6 @@ button:disabled {
   font-weight: 700;
 }
 
-/* =====================================================
-   12. RESPONSIVE
-===================================================== */
-
 @media (max-width: 768px) {
   :root {
     --sp-lg: 16px;
@@ -923,10 +859,6 @@ button:disabled {
     width: 100%;
   }
 }
-
-/* =====================================================
-   13. MOVIMIENTO REDUCIDO
-===================================================== */
 
 @media (prefers-reduced-motion: reduce) {
   *,

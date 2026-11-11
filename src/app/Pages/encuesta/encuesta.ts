@@ -31,7 +31,6 @@ const CYCLE_NAMES = [
   'Tercera menstruación',
 ];
 
-/** Las dos opciones que acepta el backend (ingresoRango): duraciones o fechas de 1 a 3 menstruaciones. */
 type CycleOption = 'duraciones' | 'fechas';
 
 @Component({
@@ -286,10 +285,6 @@ export class Encuesta {
     }
   }
 
-  /**
-   * Activa solo los campos de la opción elegida. Los campos desactivados no se validan,
-   * así que no estorban aunque la usuaria cambie de opción.
-   */
   private aplicarModo(modo: CycleOption | null): void {
     const { duracionCiclo, duracionPeriodo } = this.form.controls;
 
@@ -308,10 +303,6 @@ export class Encuesta {
     }
   }
 
-  /**
-   * El backend guarda la altura en metros y a veces lo dice en su mensaje,
-   * pero en pantalla se pide en centímetros: se cambia por un mensaje claro.
-   */
   private traducirError(mensaje: string): string {
     if (/altura/i.test(mensaje) && /metro/i.test(mensaje)) {
       return 'Revisa tu altura: escríbela en centímetros, entre 100 y 230 cm.';

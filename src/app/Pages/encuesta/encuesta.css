@@ -1,9 +1,3 @@
-/* ============================================================
-   ENCUESTA · mismo lenguaje visual que register.css
-   (clases propias survey-*: ya no depende de .auth / .auth-card /
-    .field / .btn-submit de styles/auth.css, así no se mezclan estilos)
-   ============================================================ */
-
 :host {
   display: block;
   min-height: 100vh;
@@ -34,8 +28,6 @@
   font-family: var(--font-body, 'Nunito', sans-serif);
 }
 
-/* LOGO */
-
 .survey-brand {
   position: absolute;
   top: 28px;
@@ -54,8 +46,6 @@
   height: 65px;
   object-fit: contain;
 }
-
-/* TARJETA */
 
 .survey-card {
   position: relative;
@@ -77,8 +67,6 @@
 
   animation: survey-appear 0.65s ease both;
 }
-
-/* DECORACIÓN (insignia amarilla, igual que en register) */
 
 .survey-badge {
   position: absolute;
@@ -102,8 +90,6 @@
   box-shadow: 0 5px 12px rgba(168, 62, 96, 0.12);
 }
 
-/* TÍTULOS */
-
 .survey-title {
   margin: 0;
   text-align: center;
@@ -126,8 +112,6 @@
   font-style: italic;
   line-height: 1.45;
 }
-
-/* GRUPOS (como .register-group) */
 
 .survey-group {
   min-width: 0;
@@ -182,8 +166,6 @@
   line-height: 1.5;
 }
 
-/* DISTRIBUCIÓN DE CAMPOS */
-
 .survey-grid,
 .cycle-grid {
   display: grid;
@@ -210,8 +192,6 @@
   font-weight: 500;
   line-height: 1.25;
 }
-
-/* INPUTS */
 
 .survey-field input {
   width: 100%;
@@ -245,8 +225,6 @@
 .survey-field input[type='date'] {
   color-scheme: light;
 }
-
-/* Campo con unidad (cm, kg, horas, días): la caja es el wrapper */
 
 .input-unit {
   display: flex;
@@ -283,8 +261,6 @@
   font-weight: 800;
 }
 
-/* PISTAS Y ERRORES */
-
 .survey-hint {
   margin: -2px 0 2px;
 
@@ -317,8 +293,6 @@
   text-align: center;
   font-size: 14px;
 }
-
-/* SELECTOR DE OPCIÓN (duraciones / fechas) */
 
 .mode-group {
   display: flex;
@@ -432,8 +406,6 @@
   font-size: 12px;
   line-height: 1.45;
 }
-
-/* MENSTRUACIONES (mismo estilo que .password-rules) */
 
 .cycles {
   margin: 2px 0 19px;
@@ -564,8 +536,6 @@
   line-height: 1;
 }
 
-/* FINAL */
-
 .survey-bottom {
   padding-top: 4px;
 }
@@ -652,8 +622,6 @@
   font-family: var(--font-body, 'Nunito', sans-serif);
 }
 
-/* DETALLES DECORATIVOS (estáticos, como en register) */
-
 .survey-flower {
   position: absolute;
   z-index: 0;
@@ -666,8 +634,6 @@
 .flower-three { left: 4%;  bottom: 22%; font-size: 48px; transform: rotate(12deg); }
 .flower-four  { right: 5%; bottom: 10%; font-size: 52px; transform: rotate(-14deg); }
 
-/* ANIMACIÓN */
-
 @keyframes survey-appear {
   from {
     opacity: 0;
@@ -679,8 +645,6 @@
     transform: translateY(0) scale(1);
   }
 }
-
-/* RESPONSIVE */
 
 @media (max-width: 750px) {
   .survey-page {

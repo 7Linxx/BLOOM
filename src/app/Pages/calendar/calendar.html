@@ -1,6 +1,5 @@
 <main class="calendar-page">
 
-  <!-- ENCABEZADO -->
   <section class="calendar-heading">
     <div>
       <h1>Tu calendario <span>✿</span></h1>
@@ -12,7 +11,6 @@
 
   <section class="calendar-layout">
 
-    <!-- CALENDARIO -->
     <div class="calendar-card">
 
       <div class="calendar-top">
@@ -38,14 +36,12 @@
         </div>
       </div>
 
-      <!-- DÍAS DE LA SEMANA -->
       <div class="weekdays">
         @for (day of ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']; track day) {
           <span>{{ day }}</span>
         }
       </div>
 
-      <!-- DÍAS DEL CALENDARIO -->
       <div class="calendar-grid">
         @for (day of calendarDays(); track day.key) {
           <button
@@ -78,7 +74,6 @@
         }
       </div>
 
-      <!-- LEYENDA -->
       <div class="calendar-legend">
         @for (item of legend; track item.kind) {
           <div class="legend-item">
@@ -90,10 +85,8 @@
 
     </div>
 
-    <!-- PANELES INFERIORES -->
     <section class="calendar-bottom">
 
-      <!-- DÍA SELECCIONADO -->
       <div class="selected-day-card">
 
         <div class="selected-day-header">
@@ -121,7 +114,6 @@
           <p>No hay información del ciclo para esta fecha.</p>
         }
 
-        <!-- INFORMACIÓN GUARDADA -->
         @if (
           selectedRecord().symptoms.length > 0 ||
           selectedRecord().flow ||
@@ -153,7 +145,6 @@
           </div>
         }
 
-        <!-- EDITOR DEL DÍA -->
         <div class="day-editor">
 
           <div class="editor-heading">
@@ -219,7 +210,6 @@
               </textarea>
             </div>
 
-            <!-- MENSAJE DE ERROR O CONFIRMACIÓN -->
             @if (mensaje(); as m) {
               <p
                 class="calendar-message"
@@ -252,7 +242,6 @@
         </div>
       </div>
 
-      <!-- RESUMEN DEL CICLO -->
       <aside class="cycle-summary">
 
         <span class="summary-decoration">✦</span>
@@ -329,7 +318,6 @@
 
   </section>
 
-  <!-- NOTA INFORMATIVA -->
   <p class="calendar-disclaimer">
     Las fechas y fases son estimaciones basadas en la información registrada.
     No constituyen una confirmación médica ni un método anticonceptivo.

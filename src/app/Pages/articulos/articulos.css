@@ -1,7 +1,3 @@
-/* =====================================================
-   BLOOM ARTÍCULOS — ESTILO CÁLIDO, FLORAL Y ALEGRE
-===================================================== */
-
 :host {
   display: block;
   min-height: 100vh;
@@ -22,8 +18,6 @@
   margin: 0 auto;
   padding: 55px clamp(24px, 5vw, 75px) 45px;
 }
-
-/* HERO */
 
 .articles-hero {
   position: relative;
@@ -152,8 +146,6 @@
   font-size: 35px;
 }
 
-/* TOOLBAR */
-
 .articles-toolbar {
   display: flex;
   align-items: flex-end;
@@ -223,8 +215,6 @@
   cursor: pointer;
 }
 
-/* CATEGORÍAS */
-
 .categories-section {
   padding: 20px 24px;
   background: #fffdf9;
@@ -276,8 +266,6 @@
   box-shadow: 0 5px 14px rgba(230, 185, 77, 0.2);
 }
 
-/* ENCABEZADO DE ARTÍCULOS */
-
 .articles-section {
   display: flex;
   flex-direction: column;
@@ -310,8 +298,6 @@
   font-weight: 900;
 }
 
-/* TARJETAS */
-
 .articles-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -335,8 +321,6 @@
   border-color: #f0d27c;
   box-shadow: 0 11px 24px rgba(168, 62, 96, 0.1);
 }
-
-/* IMAGEN */
 
 .article-image {
   position: relative;
@@ -435,8 +419,6 @@
   letter-spacing: 1px;
   text-transform: uppercase;
 }
-
-/* CONTENIDO */
 
 .article-content {
   padding: 21px;
@@ -571,8 +553,6 @@
   font-size: 10px;
 }
 
-/* COMENTARIOS */
-
 .comments-section {
   padding: 21px;
   background: linear-gradient(180deg, #fff8f0, #fffdf9);
@@ -688,8 +668,6 @@
   overflow-wrap: anywhere;
 }
 
-/* FORMULARIO */
-
 .comment-form {
   display: flex;
   flex-direction: column;
@@ -778,8 +756,6 @@
   opacity: 0.55;
 }
 
-/* SIN RESULTADOS */
-
 .no-results {
   display: flex;
   min-height: 260px;
@@ -835,8 +811,6 @@
   transform: translateY(-3px);
 }
 
-/* AVISO */
-
 .articles-disclaimer {
   position: relative;
   display: flex;
@@ -884,8 +858,6 @@
   font-size: 65px;
 }
 
-/* PIE */
-
 .articles-footer {
   display: flex;
   align-items: center;
@@ -903,8 +875,6 @@
   font-family: var(--font-body);
   font-size: 18px;
 }
-
-/* ANIMACIONES */
 
 @keyframes float-decoration {
   0%, 100% {
@@ -926,8 +896,6 @@
   }
 }
 
-/* RESPONSIVE — TABLET */
-
 @media (max-width: 1000px) {
   .articles-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -940,8 +908,6 @@
     gap: 32px;
   }
 }
-
-/* RESPONSIVE — MÓVIL */
 
 @media (max-width: 650px) {
   .articles-page {
@@ -1006,8 +972,6 @@
   }
 }
 
-/* RESPONSIVE — PANTALLAS PEQUEÑAS */
-
 @media (max-width: 520px) {
   .articles-grid {
     grid-template-columns: 1fr;
@@ -1052,7 +1016,6 @@
     align-self: flex-end;
   }
 }
-/* MENSAJES DE ERROR Y CONFIRMACIÓN */
 
 .articles-message {
   margin: 0 0 16px;
@@ -1069,21 +1032,17 @@
   line-height: 1.6;
 }
 
-/* confirmación: mantequilla */
 .articles-message.ok {
   color: #8b5a25;
   background: #fff0b8;
   border-color: #f2cf6b;
 }
 
-/* error: rosa */
 .articles-message.error {
   color: #a72d4d;
   background: #ffe0e7;
   border-color: #f9c4d1;
 }
-/* ACCESIBILIDAD */
-
 @media (prefers-reduced-motion: reduce) {
   .articles-page *,
   .articles-page *::before,
@@ -1092,7 +1051,6 @@
     transition: none !important;
   }
 }
-/* LEER AQUÍ EL ARTÍCULO COMPLETO */
 
 .read-here-button {
   display: flex;
@@ -1126,7 +1084,6 @@
   font-size: 15px;
 }
 
-/* en la tarjeta, el enlace original pasa a ser secundario */
 .article-actions .read-here-button ~ .read-article {
   color: var(--c-text-soft);
   background: #fff8f5;
@@ -1148,7 +1105,7 @@
   overflow-wrap: anywhere;
 }
 
-/* EDITAR Y ELIMINAR MI COMENTARIO */
+
 
 .comment-actions,
 .comment-edit-actions {
@@ -1237,8 +1194,6 @@
   font-size: 11px;
   font-weight: 800;
 }
-
-/* FORMULARIO SIN APODO */
 
 .comment-as {
   margin: 0;

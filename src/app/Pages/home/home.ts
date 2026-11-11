@@ -66,22 +66,15 @@ export class Home {
     return 'Buenas noches';
   });
 
-
-  // INFORMACIÓN DEL CICLO (GET /usuarias/{id}/ciclo-actual: el backend ya hace todos los cálculos)
-
-  /** Ciclo actual que manda el backend (null si todavía no hay ciclos). */
   cicloActual = signal<CicloActual | null>(null);
 
   cycleLength = computed(() => this.cicloActual()?.duracionEstimada ?? 28);
   periodLength = computed(() => this.cicloActual()?.duracionEstimadaMenstruacion ?? 5);
 
-  /** Día del ciclo como número (para dibujar el círculo). */
   private diaDelCiclo = computed(() => this.cicloActual()?.diaDelCiclo ?? 1);
 
-  /** Día del ciclo que se muestra ('—' si todavía no hay datos). */
   cycleDay = computed(() => this.cicloActual() ? this.diaDelCiclo() : '—');
 
-  /** La ovulación la calcula el backend: aquí solo se pasa a "día del ciclo" para el círculo. */
   ovulationDay = computed(() => {
     const ciclo = this.cicloActual();
     if (!ciclo) {
@@ -102,7 +95,6 @@ export class Home {
     return ciclo ? this.formatDate(textoAFecha(ciclo.fechaEstimadaOvulacion)) : 'Sin datos';
   });
 
-  /** Fase que calcula el backend: MENSTRUAL, FOLICULAR, OVULATORIA o LUTEA. */
   phase = computed(() => {
     switch (this.cicloActual()?.fase) {
       case 'MENSTRUAL':
@@ -202,10 +194,6 @@ export class Home {
     this.selectedMood.set(mood);
   }
 
-
-  // RESUMEN DE LA SEMANA (indicadores de GET /usuarias/{id}/calendario)
-
-  /** Días del calendario del backend, por fecha 'AAAA-MM-DD'. */
   diasCalendario = signal<Record<string, DiaCalendario>>({});
 
   week = computed<WeekDay[]>(() => {
@@ -266,12 +254,6 @@ export class Home {
   articles = signal<Article[]>([]);
 
 
-  // CARGA DE DATOS DEL BACKEND
-
-  /**
-   * Pide al backend todo lo que muestra el home. Cada parte se pide por separado:
-   * si una falla (por ejemplo, MongoDB apagado), las demás se siguen mostrando.
-   */
   private cargarDatos(): void {
     const usuaria = this.sesion.usuaria();
     if (!usuaria) {

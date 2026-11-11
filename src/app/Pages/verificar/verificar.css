@@ -4,8 +4,6 @@
   min-height: 100vh;
 }
 
-/* FONDO */
-
 .verify-page {
   --verify-pink: #f05f83;
   --verify-dark: #c8174f;
@@ -30,8 +28,6 @@
   font-family: var(--font-body, 'Nunito', sans-serif);
 }
 
-/* LOGO */
-
 .verify-brand {
   position: absolute;
   top: 28px;
@@ -54,8 +50,6 @@
   object-fit: contain;
 }
 
-/* TARJETA */
-
 .verify-card {
   position: relative;
   z-index: 1;
@@ -76,8 +70,6 @@
 
   animation: verify-appear 0.65s ease both;
 }
-
-/* DECORACIÓN */
 
 .verify-decoration {
   position: absolute;
@@ -102,8 +94,6 @@
   box-shadow: 0 5px 12px rgba(168, 62, 96, 0.12);
 }
 
-/* TÍTULOS */
-
 .verify-title {
   margin: 0;
 
@@ -126,8 +116,6 @@
   font-size: 17px;
   font-style: italic;
 }
-
-/* MENSAJE DEL CORREO */
 
 .verify-message {
   display: flex;
@@ -175,8 +163,6 @@
   font-size: 15px;
   font-weight: 900;
 }
-
-/* CAMPO */
 
 .verify-field {
   display: flex;
@@ -230,8 +216,6 @@
   border-color: #e0436a;
 }
 
-/* ERRORES */
-
 .verify-error {
   color: #c8174f;
   font-size: 13px;
@@ -250,8 +234,6 @@
   text-align: center;
   font-size: 14px;
 }
-
-/* BOTÓN */
 
 .verify-submit {
   display: block;
@@ -289,8 +271,6 @@
   opacity: 0.65;
   cursor: wait;
 }
-
-/* REENVÍO */
 
 .verify-resend {
   margin-top: 26px;
@@ -330,8 +310,6 @@
   opacity: 0.75;
 }
 
-/* REGRESAR AL REGISTRO */
-
 .verify-register {
   margin: 25px 0 0;
 
@@ -357,8 +335,6 @@
   text-decoration: underline;
 }
 
-/* DETALLES DECORATIVOS */
-
 .verify-flower {
   position: absolute;
   z-index: 0;
@@ -383,8 +359,6 @@
   transform: rotate(15deg);
 }
 
-/* ANIMACIÓN */
-
 @keyframes verify-appear {
   from {
     opacity: 0;
@@ -396,8 +370,6 @@
     transform: translateY(0) scale(1);
   }
 }
-
-/* RESPONSIVE */
 
 @media (max-width: 600px) {
   .verify-page {
@@ -444,8 +416,6 @@
     font-size: 40px;
   }
 }
-
-/* ACCESIBILIDAD */
 
 @media (prefers-reduced-motion: reduce) {
   .verify-card {

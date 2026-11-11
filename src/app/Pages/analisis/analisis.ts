@@ -16,7 +16,6 @@ interface Indicator {
   color: string;
 }
 
-/** Un síntoma del ranking (los 5 más frecuentes que manda el backend). */
 interface SymptomRank {
   position: number;
   name: string;
@@ -24,7 +23,6 @@ interface SymptomRank {
   percent: number;
 }
 
-/** Una fila del historial de ciclos. */
 interface CycleRow {
   start: Date | null;
   end: Date | null;
@@ -32,17 +30,8 @@ interface CycleRow {
   inProgress: boolean;
 }
 
-/** Lo que tienen en común las estadísticas generales y las de un periodo. */
 type Estadistica = EstadisticaResumen | EstadisticaPeriodo;
 
-/**
- * Estadísticas conectadas al backend:
- *  - "Todo el historial": GET /usuarias/{id}/estadisticas (MongoDB, colección estadisticas_resumen).
- *  - 3, 6 o 12 meses: GET /usuarias/{id}/estadisticas/periodo?desde=AAAA-MM&hasta=AAAA-MM (buckets mensuales).
- *  - Seguimiento del ciclo: GET /usuarias/{id}/ciclo-actual.
- *  - Historial de ciclos: GET /usuarias/{id}/ciclos.
- * Los promedios del backend solo cuentan ciclos FINALIZADOS (el ciclo en curso no entra).
- */
 @Component({
   selector: 'app-analisis',
   standalone: true,
@@ -64,20 +53,15 @@ export class Analisis {
     { value: 'all', label: 'Todo el historial' }
   ];
 
-  /** Estadísticas del rango elegido (null mientras cargan o si fallan). */
   private estadistica: Estadistica | null = null;
 
-  /** Ciclo actual con predicciones (null si todavía no hay ciclos). */
   private cicloActual: CicloActual | null = null;
 
-  /** Historial de ciclos (el más reciente primero). */
   private cycleRows: CycleRow[] = [];
 
-  /** Cuántos ciclos se ven al inicio del historial. */
   private readonly cyclesPreview = 6;
   showAllCycles = false;
 
-  /** Mensaje si el backend no respondió (por ejemplo, MongoDB apagado). */
   errorMessage = '';
 
   constructor() {
@@ -100,7 +84,6 @@ export class Analisis {
     return this.estadistica?.sintomasFrecuentes?.[0]?.conteo ?? 0;
   }
 
-  /** Los 5 síntomas más frecuentes (el backend ya los manda ordenados). */
   get topSymptoms(): SymptomRank[] {
     const lista = (this.estadistica?.sintomasFrecuentes ?? []).slice(0, 5);
     const maximo = Math.max(0, ...lista.map(item => item.conteo ?? 0));
@@ -252,7 +235,6 @@ export class Analisis {
     }).format(date);
   }
 
-  /** Pide las estadísticas del rango elegido. */
   private async cargarEstadisticas(): Promise<void> {
     this.errorMessage = '';
     try {
@@ -273,10 +255,6 @@ export class Analisis {
     }
   }
 
-  /**
-   * GET /usuarias/{id}/ciclos.
-   * ⚠ ajusta: se asume verCiclos() y los campos fechaInicio, fechaFin y duracion (o duracionCiclo).
-   */
   private async cargarCiclos(): Promise<void> {
     try {
       const lista: any[] = await (this.api as any).verCiclos(this.sesion.idUsuario);
@@ -300,12 +278,10 @@ export class Analisis {
     return { start, end, days, inProgress: !end };
   }
 
-  /** Date -> 'AAAA-MM' (formato que pide /estadisticas/periodo). */
   private anioMes(fecha: Date): string {
     return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
   }
 
-  /** Número de días redondeado, o 'Sin datos'. */
   private dias(valor: number | null | undefined): string {
     return valor !== null && valor !== undefined ? `${Math.round(valor)} días` : 'Sin datos';
   }

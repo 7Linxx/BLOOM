@@ -42,7 +42,6 @@ export interface SurveyData {
   flujoMenstrual: MenstrualFlow | null;
 }
 
-/** Datos del registro en curso que se guardan en sessionStorage (así no se pierden si recargan la página). */
 interface Avance {
   email: string | null;
   nickname: string | null;
@@ -50,9 +49,6 @@ interface Avance {
   verified: boolean;
 }
 
-/**
- * Guarda el avance del registro: registro → verificación → encuesta, y llama al backend en cada paso.
- */
 @Injectable({ providedIn: 'root' })
 export class Registration {
   private readonly api = inject(BloomApi);
@@ -73,9 +69,6 @@ export class Registration {
     this.leerAvance();
   }
 
-  /**
-   * Crea la cuenta (POST /autenticacion/registrar). El backend envía el código de 6 dígitos al correo.
-   */
   async register(data: RegisterData): Promise<void> {
     const usuaria = await this.api.registrar({
       primerNombre: data.primerNombre,
@@ -94,10 +87,6 @@ export class Registration {
     this.guardarAvance();
   }
 
-  /**
-   * La usuaria intentó iniciar sesión sin haber verificado el correo (el backend respondió 403):
-   * se guarda su correo para que la pantalla de verificación sepa a quién verificar.
-   */
   startVerification(email: string): void {
     this._email.set(email);
     this._nickname.set(null);
@@ -106,10 +95,6 @@ export class Registration {
     this.guardarAvance();
   }
 
-  /**
-   * La usuaria inició sesión pero no ha llenado la encuesta (encuestaCompletada = false):
-   * se marca como verificada para que la pantalla de la encuesta la deje pasar.
-   */
   startSurvey(email: string, nickname: string, idUsuario: number): void {
     this._email.set(email);
     this._nickname.set(nickname);
@@ -118,9 +103,6 @@ export class Registration {
     this.guardarAvance();
   }
 
-  /**
-   * Comprueba el código de 6 dígitos (POST /autenticacion/enviar-codigo).
-   */
   async verifyCode(code: string): Promise<void> {
     const email = this._email();
     if (!email) {
@@ -131,9 +113,6 @@ export class Registration {
     this.guardarAvance();
   }
 
-  /**
-   * Pide un código nuevo para el mismo correo (POST /autenticacion/solicitar-codigo).
-   */
   async resendCode(): Promise<void> {
     const email = this._email();
     if (email) {
@@ -141,22 +120,10 @@ export class Registration {
     }
   }
 
-  /** true si se sabe el id de la usuaria (vino del registro o del login). */
   get hasUserId(): boolean {
     return this._idUsuario !== null;
   }
 
-  /**
-   * Guarda las respuestas de la encuesta inicial (POST /usuarias/{id}/encuesta) y deja la sesión iniciada.
-   *
-   * Diferencias con el backend (ver el documento de revisión):
-   *  - La altura se pide en cm y el backend la guarda en metros: se divide entre 100.
-   *  - El backend tiene 2 opciones: duraciones (ingresoRango = true) o fechas de 1 a 3 ciclos (ingresoRango = false).
-   *    "ambos" se envía como fechas (las duraciones van como dato extra). "ninguno" el backend lo rechaza.
-   *  - Si una menstruación no tiene fecha de fin, se calcula con la duración del periodo (o 5 días),
-   *    porque el backend exige las dos fechas.
-   *  - Síntomas y flujo de la encuesta NO se envían: la tabla encuesta_inicial no tiene esas columnas.
-   */
   async saveSurvey(data: SurveyData): Promise<void> {
     if (this._idUsuario === null) {
       throw new Error('No se sabe qué usuaria está llenando la encuesta. Inicia sesión otra vez.');
@@ -194,7 +161,6 @@ export class Registration {
     }
   }
 
-  /** Suma días a una fecha 'AAAA-MM-DD'. */
   private sumarDias(fecha: string, dias: number): string {
     const [anio, mes, dia] = fecha.split('-').map(Number);
     const resultado = new Date(anio, mes - 1, dia + dias);

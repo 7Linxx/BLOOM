@@ -13,7 +13,6 @@ import {
   textoAFecha,
 } from '../../Core/mapeos';
 
-/** Solo los flujos que existen en el backend (el calendario no usa "variable" ni "no lo sé"). */
 type MenstrualFlow = 'ligero' | 'moderado' | 'abundante';
 
 type DayKind =
@@ -36,7 +35,6 @@ interface CalendarDay {
   cycleDay: number | null;
 }
 
-/** Lo que el panel "Día seleccionado" muestra de un día guardado. */
 interface SelectedRecord {
   isPeriod: boolean;
   symptoms: string[];
@@ -44,21 +42,11 @@ interface SelectedRecord {
   note: string;
 }
 
-/** Mensaje que se muestra en pantalla: confirmación (ok), aviso o error. */
 interface Mensaje {
   tipo: 'ok' | 'aviso' | 'error';
   texto: string;
 }
 
-/**
- * Calendario conectado al backend:
- *  - Los colores de cada día vienen de GET /usuarias/{id}/calendario (indicador de cada día).
- *    El backend manda un mes por llamada: se piden el mes anterior, el actual y el siguiente,
- *    así los días de otros meses que se ven en la cuadrícula también salen con su color.
- *  - El resumen (próxima menstruación, ovulación, día del ciclo) viene de GET /usuarias/{id}/ciclo-actual.
- *  - Lo guardado en cada día viene de GET /usuarias/{id}/registros-diarios, y se guarda con POST/PUT/DELETE.
- * Las predicciones ya NO se calculan aquí: las hace el backend (CicloMenstrualService).
- */
 @Component({
   selector: 'app-calendar',
   standalone: true,
@@ -77,7 +65,6 @@ export class Calendar {
 
   readonly selectedDate = signal(this.today);
 
-  /** Solo síntomas que existen en el catálogo del backend (se quitó "Otros", que no se podía guardar). */
   readonly symptomsAvailable = [
     'Cólicos',
     'Dolor de cabeza',
@@ -92,7 +79,6 @@ export class Calendar {
     'Insomnio',
   ];
 
-  /** Solo flujos que existen en el backend (se quitaron "Variable" y "No lo sé"). */
   readonly flowOptions: {
     value: MenstrualFlow;
     label: string;
@@ -107,22 +93,16 @@ export class Calendar {
   readonly flowDraft = signal<MenstrualFlow | null>(null);
   readonly noteDraft = signal('');
 
-  /** Mensaje de error o confirmación que se muestra en el editor del día (reemplaza a window.alert). */
   readonly mensaje = signal<Mensaje | null>(null);
 
-  /** true mientras se guarda, para no enviar el día dos veces. */
   readonly guardando = signal(false);
 
-  /** Días de los tres meses cargados (anterior, actual y siguiente), por fecha 'AAAA-MM-DD'. */
   private readonly diasDelMes = signal<Record<string, DiaCalendario>>({});
 
-  /** Días registrados por la usuaria, por fecha 'AAAA-MM-DD'. */
   private readonly registros = signal<Record<string, RegistroDiario>>({});
 
-  /** Ciclo actual con las predicciones del backend (null si todavía no hay ciclos). */
   private readonly cicloActual = signal<CicloActual | null>(null);
 
-  /** Número de la última carga de meses: si la usuaria cambia de mes rápido, solo vale la más reciente. */
   private cargaDeMes = 0;
 
   constructor() {
@@ -142,7 +122,6 @@ export class Calendar {
 
   readonly currentCycleDay = computed(() => this.cicloActual()?.diaDelCiclo ?? null);
 
-  /** Negativo = días de retraso (así lo muestra el HTML). */
   readonly daysUntilPeriod = computed(() => {
     const ciclo = this.cicloActual();
     if (!ciclo) return null;
@@ -277,12 +256,6 @@ export class Calendar {
     });
   }
 
-  /**
-   * Guarda el día en el backend: POST si es nuevo, PUT si ya existía.
-   * Si se dejó todo vacío y el día existía, se elimina (DELETE).
-   * Después se recarga el mes y el ciclo, porque el backend recalcula los ciclos y las predicciones.
-   * Los errores y confirmaciones se muestran con la señal `mensaje` (ya no se usa window.alert).
-   */
   async saveSelectedDay(): Promise<void> {
     if (!this.canEditSelected() || this.guardando()) return;
 
@@ -341,15 +314,12 @@ export class Calendar {
     }
   }
 
-  // ================================================================ CARGA DE DATOS
-
   private async recargarTodo(): Promise<void> {
     await this.cargarRegistros();
     await this.cargarMes();
     await this.cargarCicloActual();
   }
 
-  /** GET /registros-diarios: todos los días registrados. */
   private async cargarRegistros(): Promise<void> {
     try {
       const lista = await this.api.verRegistros(this.sesion.idUsuario);
@@ -364,11 +334,6 @@ export class Calendar {
     }
   }
 
-  /**
-   * GET /calendario del mes que se está viendo y también del anterior y el siguiente
-   * (el backend manda un mes por llamada), para que los días de otros meses que aparecen
-   * en la cuadrícula también tengan su color. Si falla algún mes, los demás se muestran igual.
-   */
   private async cargarMes(): Promise<void> {
     const carga = ++this.cargaDeMes;
     const mes = this.currentMonth();
@@ -382,7 +347,6 @@ export class Calendar {
       meses.map(m => this.api.verCalendario(this.sesion.idUsuario, m.getFullYear(), m.getMonth() + 1))
     );
 
-    // Si mientras tanto cambió de mes, esta respuesta ya no sirve.
     if (carga !== this.cargaDeMes) return;
 
     const mapa: Record<string, DiaCalendario> = {};
@@ -396,7 +360,6 @@ export class Calendar {
     this.diasDelMes.set(mapa);
   }
 
-  /** GET /ciclo-actual (predicciones del backend). */
   private async cargarCicloActual(): Promise<void> {
     try {
       this.cicloActual.set(await this.api.verCicloActual(this.sesion.idUsuario));
@@ -405,7 +368,6 @@ export class Calendar {
     }
   }
 
-  /** Llena el editor con lo guardado en el día seleccionado. */
   private cargarBorrador(): void {
     const guardado = this.selectedRecord();
     this.isPeriodDraft.set(guardado.isPeriod);
@@ -414,12 +376,10 @@ export class Calendar {
     this.noteDraft.set(guardado.note);
   }
 
-  /** Nombres de síntomas/emociones guardados, con los nombres que usa esta página. */
   private nombresGuardados(registro: RegistroDiario): string[] {
     return registroANombres(registro, this.symptomsAvailable);
   }
 
-  // ================================================================ FECHAS
 
   private normalizeDate(date: Date): Date {
     return new Date(

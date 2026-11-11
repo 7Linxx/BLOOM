@@ -42,22 +42,11 @@ export class Login {
     return control.invalid && (control.touched || this.submitted());
   }
 
-  /**
-   * "¿Olvidaste tu contraseña?".
-   * TODO: cuando exista el endpoint en el backend, reemplazar el aviso de abajo por la llamada
-   * (por ejemplo, enviar el correo de this.email.value y navegar a la pantalla de recuperación).
-   */
   forgotPassword(): void {
     this.errorMsg.set('');
     this.infoMsg.set('Muy pronto podrás recuperar tu contraseña ♡');
   }
 
-  /**
-   * POST /autenticacion/iniciar-sesion.
-   *  - 200: si ya llenó la encuesta va al home; si no, a la encuesta (C.7).
-   *  - 403: el correo no está verificado: se envía un código nuevo y va a /verificar.
-   *  - 401: correo o contraseña incorrectos (el backend manda el mensaje).
-   */
   async onSubmit(): Promise<void> {
     this.submitted.set(true);
     this.errorMsg.set('');

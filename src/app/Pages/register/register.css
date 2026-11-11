@@ -28,8 +28,6 @@
   font-family: var(--font-body, 'Nunito', sans-serif);
 }
 
-/* LOGO */
-
 .register-brand {
   position: absolute;
   top: 28px;
@@ -48,8 +46,6 @@
   height: 65px;
   object-fit: contain;
 }
-
-/* TARJETA */
 
 .register-card {
   position: relative;
@@ -71,8 +67,6 @@
 
   animation: register-appear 0.65s ease both;
 }
-
-/* DECORACIÓN */
 
 .register-decoration {
   position: absolute;
@@ -96,8 +90,6 @@
   box-shadow: 0 5px 12px rgba(168, 62, 96, 0.12);
 }
 
-/* TÍTULOS */
-
 .register-title {
   margin: 0;
   text-align: center;
@@ -119,8 +111,6 @@
   font-style: italic;
 }
 
-/* SECCIONES */
-
 .register-group {
   min-width: 0;
   margin: 0 0 25px;
@@ -139,8 +129,6 @@
   font-size: 21px;
   font-weight: 500;
 }
-
-/* DISTRIBUCIÓN DE CAMPOS */
 
 .register-grid {
   display: grid;
@@ -168,8 +156,6 @@
   font-size: 12px;
   font-weight: 600;
 }
-
-/* INPUTS */
 
 .register-field input {
   width: 100%;
@@ -204,14 +190,9 @@
   border-color: #e0436a;
 }
 
-/* FECHA */
-
 .register-field input[type='date'] {
   color-scheme: light;
 }
-
-/* PISTAS Y ERRORES */
-
 .register-hint {
   color: var(--c-text-soft, #8a5a6b);
   font-size: 12px;
@@ -237,8 +218,6 @@
   text-align: center;
   font-size: 14px;
 }
-
-/* CONTRASEÑAS */
 
 .password-grid {
   margin-top: 5px;
@@ -276,8 +255,6 @@
 .register-password-toggle:hover {
   background: rgba(255, 143, 163, 0.2);
 }
-
-/* REQUISITOS DE CONTRASEÑA */
 
 .password-rules {
   margin-top: 18px;
@@ -323,8 +300,6 @@
   font-weight: 900;
 }
 
-/* BOTÓN */
-
 .register-submit {
   display: block;
   width: min(100%, 320px);
@@ -361,8 +336,6 @@
   cursor: wait;
 }
 
-/* ENLACE A LOGIN */
-
 .register-login {
   margin: 25px 0 0;
   text-align: center;
@@ -382,8 +355,6 @@
   color: #e8548a;
   text-decoration: underline;
 }
-
-/* DETALLES DECORATIVOS */
 
 .register-flower {
   position: absolute;
@@ -406,8 +377,6 @@
   transform: rotate(15deg);
 }
 
-/* ANIMACIÓN */
-
 @keyframes register-appear {
   from {
     opacity: 0;
@@ -419,8 +388,6 @@
     transform: translateY(0) scale(1);
   }
 }
-
-/* RESPONSIVE */
 
 @media (max-width: 750px) {
   .register-page {

@@ -19,7 +19,6 @@ interface UserProfile {
   alturaCm: number | null;
 }
 
-/** Valores del ciclo y del sueño que se guardan en Ajustes del backend. */
 interface CycleSettings {
   horasSueno: number | null;
   duracionCiclo: number | null;
@@ -35,7 +34,6 @@ interface PrivacyPreferences {
   weight: boolean;
 }
 
-/** Mensaje de confirmación o error que se muestra dentro de una tarjeta. */
 interface FormMessage {
   tipo: 'ok' | 'error';
   texto: string;
@@ -56,30 +54,24 @@ export class Perfil {
   // Las preferencias de privacidad NO existen en el backend: se siguen guardando solo en este navegador.
   private readonly privacyKey = 'bloom_privacy_preferences';
 
-  /** Datos tal como están en el backend (para "Cancelar"). */
   private original: UserProfile = this.emptyProfile();
 
-  /** Duración fija del ciclo guardada en ajustes (solo se usa con el método MANUAL). */
   private duracionFija: number | null = null;
 
-  /** Promedio real de los ciclos (estadísticas) o, si no hay, la duración estimada del ciclo actual. */
   private duracionEstimada: number | null = null;
 
   profile: UserProfile = this.emptyProfile();
 
-  /** Sueño y duraciones fijas (Ajustes del backend). */
   cycleSettings: CycleSettings = this.emptyCycleSettings();
   private originalCycleSettings: CycleSettings = this.emptyCycleSettings();
   cycleSettingsMessage: FormMessage | null = null;
 
   privacy: PrivacyPreferences = this.emptyPrivacy();
 
-  /** Cambio de contraseña. */
   passwordForm = { actual: '', nueva: '', confirmar: '' };
   passwordMessage: FormMessage | null = null;
   changingPassword = false;
 
-  /** Eliminar cuenta (dos pasos: pedir confirmación y escribir ELIMINAR). */
   deleteStep: 'closed' | 'confirm' = 'closed';
   deleteText = '';
   deleteMessage: FormMessage | null = null;
@@ -206,10 +198,6 @@ export class Perfil {
     ];
   }
 
-  /**
-   * Guarda en el backend (PUT /usuarias/{id}/ajustes) lo que se puede cambiar: apodo, peso y altura.
-   * Nombres, apellidos, fecha de nacimiento y correo son de solo lectura (Ajustes no los tiene).
-   */
   async saveProfile(): Promise<void> {
     this.errorMessage = '';
     this.savedMessage = '';
@@ -267,10 +255,6 @@ export class Perfil {
     this.errorMessage = '';
   }
 
-  /**
-   * Guarda horas de sueño y duraciones fijas del ciclo y de la menstruación (PUT /usuarias/{id}/ajustes).
-   * ⚠ ajusta: se asumen los campos horasSueno, duracionCiclo y duracionMenstruacion de Ajustes.
-   */
   async saveCycleSettings(): Promise<void> {
     this.cycleSettingsMessage = null;
 
@@ -314,10 +298,6 @@ export class Perfil {
     this.cycleSettingsMessage = null;
   }
 
-  /**
-   * Cambia el método de cálculo en el backend: fija = MANUAL, automática = AUTOMATICO (PUT /ajustes).
-   * Para MANUAL el backend exige que exista una duración de ciclo (de la encuesta o de ajustes).
-   */
   async changePredictionPreference(value: boolean): Promise<void> {
     this.savedMessage = '';
     this.errorMessage = '';
@@ -338,7 +318,6 @@ export class Perfil {
     this.settingsExpanded = !this.settingsExpanded;
   }
 
-  /** Estas preferencias solo se guardan en este navegador (no existen en el backend). */
   savePrivacyPreferences(): void {
     try {
       localStorage.setItem(
@@ -353,10 +332,6 @@ export class Perfil {
     }
   }
 
-  /**
-   * Cambia la contraseña: PUT /usuarias/{id}/contrasenia.
-   * ⚠ ajusta: se asume cambiarContrasenia(idUsuario, contraseniaActual, contraseniaNueva) en BloomApi.
-   */
   async changePassword(): Promise<void> {
     this.passwordMessage = null;
 
@@ -398,10 +373,6 @@ export class Perfil {
     }
   }
 
-  /**
-   * Cierra la sesión y vuelve al inicio.
-   * ⚠ ajusta: se asume Sesion.cerrar() y que '/' es la pantalla de ingreso.
-   */
   logout(): void {
     (this.sesion as any).cerrar();
     this.router.navigate(['/']);
@@ -419,10 +390,6 @@ export class Perfil {
     this.deleteMessage = null;
   }
 
-  /**
-   * Elimina la cuenta: DELETE /usuarias/{id}. Es definitivo.
-   * ⚠ ajusta: se asume eliminarUsuaria(idUsuario) en BloomApi.
-   */
   async deleteAccount(): Promise<void> {
     if (!this.canDeleteAccount) {
       return;
@@ -451,7 +418,6 @@ export class Perfil {
     }
   }
 
-  /** Carga los datos de la usuaria (GET /usuarias/{id}) y sus ajustes (GET /usuarias/{id}/ajustes). */
   private async loadProfile(): Promise<void> {
     try {
       const idUsuario = this.sesion.idUsuario;
@@ -487,7 +453,6 @@ export class Perfil {
     }
   }
 
-  /** UsuariaDTO del backend -> datos que muestra el HTML (altura de metros a cm). */
   private aPerfil(usuaria: Usuaria): UserProfile {
     return {
       primerNombre: usuaria.primerNombre ?? '',

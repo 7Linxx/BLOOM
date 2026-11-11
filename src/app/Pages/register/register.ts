@@ -26,8 +26,6 @@ type FieldName =
   | 'password'
   | 'confirmar';
 
-// Mismas reglas que strongPassword (front) y que el backend:
-// mínimo 8 caracteres, al menos una letra y al menos un número.
 const PASSWORD_RULES = [
   {
     label: 'Mínimo 8 caracteres',

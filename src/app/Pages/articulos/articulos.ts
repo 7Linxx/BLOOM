@@ -6,7 +6,6 @@ import { BloomApi, mensajeDeError } from '../../Core/Services/bloom-api.service'
 import { Sesion } from '../../Core/Services/sesion.service';
 import { Articulo, Comentario } from '../../Core/modelos';
 
-/** Artículo como lo usa el HTML (se arma con el ArticuloDTO que manda el backend). */
 interface Article {
   id: string;
   title: string;
@@ -19,7 +18,6 @@ interface Article {
   createdAt: string;
 }
 
-/** Comentario como lo usa el HTML (se arma con el ComentarioDTO del backend). */
 interface ArticleComment {
   id: string;
   userId: string | null;
@@ -28,21 +26,12 @@ interface ArticleComment {
   createdAt: string;
 }
 
-/** Mensaje de error o confirmación de los comentarios de un artículo. */
 interface CommentMessage {
   articleId: string;
   tipo: 'ok' | 'error';
   texto: string;
 }
 
-/**
- * Artículos y comentarios conectados al backend (MongoDB):
- *  - GET /articulos, GET /articulos/{id}/comentarios, POST /articulos/{id}/comentarios.
- *  - PUT y DELETE /articulos/{id}/comentarios/{idComentario}: editar y eliminar el comentario propio.
- * El apodo de quien comenta lo pone el backend (es el de la usuaria con sesión), por eso el formulario
- * ya no pide apodo.
- * Las categorías salen de los mismos artículos que manda el backend, así siempre coinciden.
- */
 @Component({
   selector: 'app-articulos',
   standalone: true,
@@ -58,42 +47,32 @@ export class Articulos {
   selectedCategory = 'Todos';
   selectedArticleId: string | null = null;
 
-  /** Artículo con el contenido completo abierto. */
   expandedArticleId: string | null = null;
 
   commentDraft = '';
 
-  /** Edición de un comentario propio. */
   editingCommentId: string | null = null;
   editDraft = '';
   savingEdit = false;
 
-  /** Comentario que está pidiendo confirmación para eliminarse. */
   deletingCommentId: string | null = null;
 
-  /** Artículos que manda el backend. */
   articles: Article[] = [];
 
-  /** Mensaje si el backend no respondió (por ejemplo, MongoDB apagado). Se muestra sobre la lista. */
   errorMessage = '';
 
-  /** Mensaje de error o confirmación al publicar un comentario (se muestra en ese artículo). */
   commentMessage: CommentMessage | null = null;
 
-  /** true mientras se publica un comentario, para no enviarlo dos veces. */
   sendingComment = false;
 
-  /** Comentarios ya cargados de cada artículo (se piden al abrir los comentarios). */
   comments: Record<string, ArticleComment[]> = {};
 
-  /** Total de comentarios de cada artículo según el backend (antes de abrirlos). */
   private totales: Record<string, number> = {};
 
   constructor() {
     this.cargarArticulos();
   }
 
-  /** Categorías reales de los artículos que existen (así no se desajustan con Mongo). */
   get categories(): string[] {
     const categorias = this.articles
       .map(article => article.category)
@@ -126,7 +105,6 @@ export class Articulos {
       .reduce((total, cantidad) => total + cantidad, 0);
   }
 
-  /** Apodo con el que se publicará el comentario (el de la sesión). */
   get commentAuthor(): string {
     return this.sesion.usuaria()?.apodo ?? '';
   }
@@ -135,13 +113,11 @@ export class Articulos {
     this.selectedCategory = category;
   }
 
-  /** Abre o cierra el contenido completo del artículo. */
   toggleContent(articleId: string): void {
     this.expandedArticleId =
       this.expandedArticleId === articleId ? null : articleId;
   }
 
-  /** Párrafos del contenido completo. */
   getParagraphs(article: Article): string[] {
     return article.content
       .split(/\n+/)
@@ -149,7 +125,6 @@ export class Articulos {
       .filter(parrafo => parrafo.length > 0);
   }
 
-  /** Abre o cierra los comentarios. Al abrirlos se piden al backend. */
   toggleComments(articleId: string): void {
     this.selectedArticleId =
       this.selectedArticleId === articleId ? null : articleId;
@@ -172,7 +147,6 @@ export class Articulos {
     return this.comments[articleId]?.length ?? this.totales[articleId] ?? 0;
   }
 
-  /** true si el comentario es de la usuaria con sesión. */
   isMine(comment: ArticleComment): boolean {
     if (comment.userId !== null) {
       return String(comment.userId) === String(this.sesion.idUsuario);
@@ -181,7 +155,6 @@ export class Articulos {
     return !!this.commentAuthor && comment.nickname === this.commentAuthor;
   }
 
-  /** POST /articulos/{id}/comentarios y vuelve a cargar los comentarios. */
   async addComment(articleId: string): Promise<void> {
     const message = this.commentDraft.trim();
 
@@ -225,7 +198,6 @@ export class Articulos {
     this.editDraft = '';
   }
 
-  /** PUT /articulos/{id}/comentarios/{idComentario} */
   async saveEdit(articleId: string, comment: ArticleComment): Promise<void> {
     const message = this.editDraft.trim();
 
@@ -267,7 +239,6 @@ export class Articulos {
     this.deletingCommentId = null;
   }
 
-  /** DELETE /articulos/{id}/comentarios/{idComentario} */
   async confirmDelete(articleId: string, comment: ArticleComment): Promise<void> {
     this.commentMessage = null;
 
@@ -301,7 +272,7 @@ export class Articulos {
     }).format(new Date(date.length === 10 ? `${date}T12:00:00` : date));
   }
 
-  /** GET /articulos y los convierte al formato del HTML. */
+
   private async cargarArticulos(): Promise<void> {
     try {
       const lista = await this.api.verArticulos();
@@ -316,7 +287,6 @@ export class Articulos {
     }
   }
 
-  /** GET /articulos/{id}/comentarios */
   private async cargarComentarios(articleId: string): Promise<void> {
     try {
       const lista = await this.api.verComentarios(articleId);

@@ -12,7 +12,6 @@ import {
   registroANombres,
 } from '../../Core/mapeos';
 
-/** Lo que el historial muestra de cada día (armado con lo que manda el backend). */
 interface DayRecord {
   isPeriod: boolean;
   symptoms: string[];
@@ -51,7 +50,6 @@ export class Care {
   isPeriod = false;
   flowIntensity = 0;
 
-  /** Intensidades que existen en el backend (la 5 "Muy abundante" no existe). */
   flowLevels = [
     { value: 0, label: 'Ninguno' },
     { value: 1, label: 'Muy ligero' },
@@ -60,7 +58,6 @@ export class Care {
     { value: 4, label: 'Abundante' }
   ];
 
-  /** Síntomas del catálogo ("Estrés" no existe en el backend). */
   symptomGroups: SymptomGroup[] = [
     {
       title: 'Síntomas físicos',
@@ -89,7 +86,6 @@ export class Care {
 
   selectedSymptoms: string[] = [];
 
-  /** Emociones del catálogo del backend. */
   emotionOptions: CatalogOption[] = [
     { name: 'Feliz', emoji: '😊' },
     { name: 'Con energía', emoji: '⚡' },
@@ -103,7 +99,6 @@ export class Care {
 
   selectedEmotions: string[] = [];
 
-  /** Actividades sexuales del catálogo del backend. */
   sexualActivityOptions: CatalogOption[] = [
     { name: 'Con protección', emoji: '🛡️' },
     { name: 'Sin protección', emoji: '💞' },
@@ -119,13 +114,10 @@ export class Care {
   private readonly api = inject(BloomApi);
   private readonly sesion = inject(Sesion);
 
-  /** Días registrados que manda el backend (GET /registros-diarios), por fecha 'AAAA-MM-DD'. */
   private registros: Record<string, RegistroDiario> = {};
 
-  /** Catálogos del backend (síntomas, emociones y actividades sexuales con su id). */
   private catalogos: Catalogos | null = null;
 
-  /** Historial ya armado (se recalcula cada vez que se cargan los registros). */
   history: HistoryItem[] = [];
 
   constructor() {
@@ -151,7 +143,6 @@ export class Care {
     return !!this.registros[this.selectedDate];
   }
 
-  /** Todos los nombres de síntomas que muestra esta página. */
   private get todosLosSintomas(): string[] {
     const nombres: string[] = [];
     for (const grupo of this.symptomGroups) {
@@ -160,7 +151,6 @@ export class Care {
     return nombres;
   }
 
-  /** Quita tildes, mayúsculas y guiones bajos para comparar nombres del catálogo. */
   private normalizar(texto: string): string {
     return (texto ?? '')
       .normalize('NFD')
@@ -170,7 +160,6 @@ export class Care {
       .toLowerCase();
   }
 
-  /** Nombres de los elementos de una lista del backend (emociones / actividades), dejando solo los que muestra esta página. */
   private nombresDe(lista: any[] | null | undefined, opciones: CatalogOption[]): string[] {
     const guardados = (lista ?? []).map(item => this.normalizar(item?.nombre));
     return opciones
@@ -178,7 +167,6 @@ export class Care {
       .map(opcion => opcion.name);
   }
 
-  /** Busca en una lista del catálogo los elementos que corresponden a los nombres elegidos. */
   private traducir(
     nombres: string[],
     catalogo: any[] | null | undefined
@@ -200,7 +188,6 @@ export class Care {
     return { encontrados, noGuardados };
   }
 
-  /** Convierte un registro del backend en lo que muestra el historial. */
   private aVista(registro: RegistroDiario): DayRecord {
     return {
       isPeriod: registro.hayMenstruacion,
@@ -211,7 +198,6 @@ export class Care {
     };
   }
 
-  /** GET /usuarias/{id}/registros-diarios y arma el historial. */
   private async cargarRegistros(): Promise<void> {
     try {
       const lista = await this.api.verRegistros(this.sesion.idUsuario);
@@ -346,10 +332,6 @@ export class Care {
     }
   }
 
-  /**
-   * Guarda el día en el backend (POST si es nuevo, PUT si ya existía).
-   * Se guarda: menstruación, tipo de flujo, síntomas, emociones y actividades sexuales del catálogo, y la nota.
-   */
   async saveRecord(): Promise<void> {
     if (!this.canEditSelected) return;
 
@@ -391,7 +373,6 @@ export class Care {
     }
   }
 
-  /** DELETE /usuarias/{id}/registros-diarios/{fecha} */
   async deleteRecord(): Promise<void> {
     if (!this.canEditSelected || !this.hasRecord) return;
 
@@ -414,7 +395,6 @@ export class Care {
     this.selectDate(date);
   }
 
-  /** Emoji del historial: el de la primera emoción guardada ese día. */
   getRecordEmoji(record: DayRecord): string {
     const first = record.emotions[0];
     const option = this.emotionOptions.find(item => item.name === first);

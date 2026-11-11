@@ -1,6 +1,5 @@
 <main class="articles-page">
 
-  <!-- ENCABEZADO -->
   <section class="articles-hero">
     <div class="hero-content">
       <span class="hero-eyebrow">APRENDE · DESCUBRE · CUÍDATE</span>
@@ -24,7 +23,6 @@
     </div>
   </section>
 
-  <!-- BÚSQUEDA -->
   <section class="articles-toolbar">
     <div class="toolbar-heading">
       <span class="toolbar-kicker">BIBLIOTECA BLOOM</span>
@@ -54,7 +52,6 @@
     </div>
   </section>
 
-  <!-- CATEGORÍAS -->
   <section class="categories-section">
     <span class="categories-label">EXPLORAR POR CATEGORÍA</span>
 
@@ -70,7 +67,6 @@
     </div>
   </section>
 
-  <!-- LISTADO DE ARTÍCULOS -->
   <section class="articles-section">
 
     <div class="articles-section-heading">
@@ -87,7 +83,6 @@
       </span>
     </div>
 
-    <!-- ERROR AL CARGAR LOS ARTÍCULOS -->
     <p class="articles-message error" role="alert" *ngIf="errorMessage">
       {{ errorMessage }}
     </p>
@@ -99,7 +94,6 @@
         *ngFor="let article of filteredArticles"
       >
 
-        <!-- IMAGEN -->
         <div class="article-image">
 
           <img
@@ -121,7 +115,6 @@
           </span>
         </div>
 
-        <!-- CONTENIDO -->
         <div class="article-content">
 
           <div class="article-meta">
@@ -180,7 +173,6 @@
           </div>
         </div>
 
-        <!-- CONTENIDO COMPLETO -->
         <div
           class="article-full"
           *ngIf="expandedArticleId === article.id && article.content"
@@ -192,7 +184,6 @@
           </p>
         </div>
 
-        <!-- COMENTARIOS -->
         <div
           class="comments-section"
           *ngIf="selectedArticleId === article.id"
@@ -231,10 +222,8 @@
                   <span>{{ formatDate(comment.createdAt) }}</span>
                 </div>
 
-                <!-- VER -->
                 <p *ngIf="editingCommentId !== comment.id">{{ comment.message }}</p>
 
-                <!-- EDITAR -->
                 <div class="comment-edit" *ngIf="editingCommentId === comment.id">
                   <textarea
                     rows="3"
@@ -263,7 +252,6 @@
                   </div>
                 </div>
 
-                <!-- ACCIONES SOLO EN MIS COMENTARIOS -->
                 <div
                   class="comment-actions"
                   *ngIf="isMine(comment) && editingCommentId !== comment.id && deletingCommentId !== comment.id"
@@ -285,7 +273,6 @@
                   </button>
                 </div>
 
-                <!-- CONFIRMAR ELIMINAR -->
                 <div class="comment-delete-confirm" *ngIf="deletingCommentId === comment.id">
                   <span>¿Eliminar tu comentario?</span>
 
@@ -323,7 +310,6 @@
             {{ commentMessage.texto }}
           </p>
 
-          <!-- FORMULARIO DE COMENTARIO -->
           <form
             class="comment-form"
             (ngSubmit)="addComment(article.id)"
@@ -365,7 +351,6 @@
 
     </div>
 
-    <!-- SIN RESULTADOS -->
     <div class="no-results" *ngIf="filteredArticles.length === 0 && !errorMessage">
       <span>❀</span>
       <h3>No encontramos artículos</h3>
@@ -381,7 +366,6 @@
 
   </section>
 
-  <!-- AVISO INFORMATIVO -->
   <section class="articles-disclaimer">
     <div class="disclaimer-icon">♡</div>
 
@@ -398,7 +382,7 @@
     <span class="disclaimer-flower">✿</span>
   </section>
 
-  <!-- PIE -->
+
   <footer class="articles-footer">
     <span>✿</span>
     Aprende a conocerte, un día a la vez.

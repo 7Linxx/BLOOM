@@ -2,24 +2,16 @@ import { Injectable, computed, signal } from '@angular/core';
 
 import { Usuaria } from '../modelos';
 
-/**
- * Guarda quién inició sesión.
- * El backend NO usa token: el login devuelve los datos de la usuaria y el front guarda su idUsuario
- * (así está decidido en UsuariaService.iniciarSesion). Se guarda en localStorage para no perder la sesión al recargar.
- */
 @Injectable({ providedIn: 'root' })
 export class Sesion {
   private readonly clave = 'bloom_sesion';
 
   private readonly _usuaria = signal<Usuaria | null>(this.leer());
 
-  /** Usuaria que inició sesión (o null). */
   readonly usuaria = this._usuaria.asReadonly();
 
-  /** true si hay una usuaria con sesión iniciada. */
   readonly activa = computed(() => this._usuaria() !== null);
 
-  /** id de la usuaria (lo piden casi todas las rutas del backend). Lanza error si no hay sesión. */
   get idUsuario(): number {
     const usuaria = this._usuaria();
     if (!usuaria) {
@@ -28,7 +20,6 @@ export class Sesion {
     return usuaria.idUsuario;
   }
 
-  /** Guarda la usuaria que devolvió el backend (login, o después de la encuesta). */
   iniciar(usuaria: Usuaria): void {
     this._usuaria.set(usuaria);
     try {
@@ -38,7 +29,6 @@ export class Sesion {
     }
   }
 
-  /** Actualiza datos de la usuaria guardada (por ejemplo, el apodo después de cambiarlo en el perfil). */
   actualizar(cambios: Partial<Usuaria>): void {
     const actual = this._usuaria();
     if (actual) {
@@ -46,7 +36,6 @@ export class Sesion {
     }
   }
 
-  /** Cierra la sesión. */
   cerrar(): void {
     this._usuaria.set(null);
     try {
@@ -56,7 +45,6 @@ export class Sesion {
     }
   }
 
-  /** Lee la sesión guardada al abrir la página. */
   private leer(): Usuaria | null {
     try {
       const guardada = localStorage.getItem(this.clave);

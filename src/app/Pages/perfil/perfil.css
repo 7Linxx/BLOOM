@@ -1,7 +1,3 @@
-/* =====================================================
-   BLOOM PERFIL — ESTILO CÁLIDO, FLORAL Y ALEGRE
-===================================================== */
-
 :host {
   display: block;
   min-height: 100vh;
@@ -22,9 +18,6 @@
   margin: 0 auto;
   padding: 55px clamp(24px, 5vw, 75px) 45px;
 }
-
-/* ENCABEZADO */
-
 .profile-hero {
   position: relative;
   display: flex;
@@ -126,9 +119,6 @@
   color: #e6b94d;
   font-size: 30px;
 }
-
-/* RESUMEN */
-
 .profile-summary {
   position: relative;
   display: flex;
@@ -244,8 +234,6 @@
   font-size: 16px;
 }
 
-/* MENSAJES */
-
 .feedback {
   display: flex;
   align-items: center;
@@ -268,8 +256,6 @@
   background: #fff0f4;
   border: 1px solid #f5d0dc;
 }
-
-/* SECCIONES */
 
 .profile-section {
   display: flex;
@@ -305,8 +291,6 @@
   font-family: var(--font-accent);
   font-size: 50px;
 }
-
-/* TARJETAS */
 
 .profile-card,
 .preference-card,
@@ -384,8 +368,6 @@
   border-top: 1px dashed #efcfd9;
 }
 
-/* FORMULARIO */
-
 .profile-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -460,8 +442,6 @@
   transform: translateY(-50%);
 }
 
-/* BOTONES DEL FORMULARIO */
-
 .form-actions {
   display: flex;
   flex-wrap: wrap;
@@ -513,8 +493,6 @@
 .save-button span {
   font-size: 15px;
 }
-
-/* PREFERENCIAS DE PREDICCIÓN */
 
 .preference-intro {
   display: flex;
@@ -667,8 +645,6 @@
   line-height: 1.7;
 }
 
-/* AJUSTES Y PRIVACIDAD */
-
 .settings-card {
   padding: 0;
   overflow: hidden;
@@ -806,8 +782,6 @@
   line-height: 1.5;
 }
 
-/* SWITCH */
-
 .switch {
   position: relative;
   display: inline-block;
@@ -883,8 +857,6 @@
   line-height: 1.7;
 }
 
-/* TARJETA FINAL */
-
 .profile-footer-card {
   position: relative;
   display: flex;
@@ -941,8 +913,6 @@
   text-align: center;
 }
 
-/* ANIMACIONES */
-
 @keyframes float-decoration {
   0%, 100% {
     transform: translateY(0);
@@ -963,16 +933,12 @@
   }
 }
 
-/* RESPONSIVE — TABLET */
-
 @media (max-width: 900px) {
   .profile-page {
     padding: 35px 25px;
     gap: 32px;
   }
 }
-
-/* RESPONSIVE — MÓVIL */
 
 @media (max-width: 650px) {
   .profile-page {
@@ -1078,8 +1044,6 @@
   }
 }
 
-/* RESPONSIVE — PANTALLAS PEQUEÑAS */
-
 @media (max-width: 390px) {
   .profile-summary {
     align-items: flex-start;
@@ -1104,8 +1068,6 @@
   }
 }
 
-/* ACCESIBILIDAD */
-
 @media (prefers-reduced-motion: reduce) {
   .profile-page *,
   .profile-page *::before,
@@ -1114,8 +1076,6 @@
     transition: none !important;
   }
 }
-/* RESUMEN COMPACTO DE INFORMACIÓN PERSONAL */
-
 .compact-profile-card {
   padding: 25px 28px;
 }
@@ -1193,13 +1153,10 @@
     padding: 20px;
   }
 }
-/* MENSAJES DENTRO DE UNA TARJETA */
 
 .inline-feedback {
   margin: 0 0 18px;
 }
-
-/* FORMULARIOS DE TRES COLUMNAS */
 
 .profile-form.three-columns {
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1217,8 +1174,6 @@
   }
 }
 
-/* TARJETA DE DATOS DEL CICLO */
-
 .cycle-data-card {
   margin-top: 20px;
 }
@@ -1229,13 +1184,9 @@
   opacity: 0.55;
 }
 
-/* SECCIÓN DE SEGURIDAD */
-
 .profile-section > .profile-card + .profile-card {
   margin-top: 20px;
 }
-
-/* ELIMINAR CUENTA */
 
 .danger-card {
   background: linear-gradient(145deg, #fffdf9, #fff0f4);

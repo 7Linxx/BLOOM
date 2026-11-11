@@ -1,6 +1,5 @@
 <main class="profile-page">
 
-  <!-- ENCABEZADO -->
   <section class="profile-hero">
     <div class="hero-content">
       <span class="hero-eyebrow">TU ESPACIO PERSONAL</span>
@@ -20,7 +19,6 @@
     </div>
   </section>
 
-  <!-- RESUMEN DEL PERFIL -->
   <section class="profile-summary">
     <div class="profile-avatar">
       <span>{{ initials }}</span>
@@ -47,7 +45,6 @@
     </button>
   </section>
 
-  <!-- MENSAJES -->
   <div class="feedback success-message" *ngIf="savedMessage">
     <span>♡</span>
     {{ savedMessage }}
@@ -58,7 +55,6 @@
     {{ errorMessage }}
   </div>
 
-  <!-- INFORMACIÓN PERSONAL -->
   <section class="profile-section">
     <div class="section-heading">
       <div>
@@ -70,7 +66,6 @@
       <span class="section-decoration">♡</span>
     </div>
 
-    <!-- RESUMEN COMPACTO CUANDO EL FORMULARIO ESTÁ CERRADO -->
     <div class="profile-card compact-profile-card" *ngIf="!editing">
       <div class="compact-card-heading">
         <div>
@@ -312,7 +307,6 @@
     </div>
   </section>
 
-  <!-- PREFERENCIAS DEL CICLO -->
   <section class="profile-section">
     <div class="section-heading">
       <div>
@@ -409,7 +403,6 @@
 
     </div>
 
-    <!-- DATOS DEL CICLO Y SUEÑO -->
     <div class="preference-card cycle-data-card">
 
       <div class="preference-intro">
@@ -503,7 +496,6 @@
     </div>
   </section>
 
-  <!-- AJUSTES -->
   <section class="profile-section">
     <div class="section-heading">
       <div>
@@ -588,7 +580,6 @@
     </div>
   </section>
 
-  <!-- SEGURIDAD Y CUENTA -->
   <section class="profile-section">
     <div class="section-heading">
       <div>
@@ -600,7 +591,6 @@
       <span class="section-decoration">♧</span>
     </div>
 
-    <!-- CAMBIAR CONTRASEÑA -->
     <div class="profile-card">
 
       <div class="card-heading">
@@ -674,7 +664,6 @@
 
     </div>
 
-    <!-- ELIMINAR CUENTA -->
     <div class="profile-card danger-card">
 
       <div class="card-heading">
@@ -748,7 +737,6 @@
     </div>
   </section>
 
-  <!-- AVISO -->
   <section class="profile-footer-card">
     <span class="footer-heart">♡</span>
 
