@@ -43,6 +43,7 @@ export class CycleService {
   private readonly storageKey = 'bloom_cycle_records';
   private readonly settingsKey = 'bloom_cycle_settings';
 
+  readonly useFixedCycleRanges = signal(false);
   readonly records = signal<Record<string, DayRecord>>({});
 
   readonly cycleLength = signal(28);
@@ -209,6 +210,11 @@ export class CycleService {
         if (typeof settings.initialWeight === 'number') {
           this.initialWeight.set(settings.initialWeight);
         }
+
+        if (typeof settings.useFixedCycleRanges === 'boolean') {
+          this.useFixedCycleRanges.set(settings.useFixedCycleRanges);
+        }
+
       }
     } catch {
       this.records.set({});
@@ -232,6 +238,7 @@ export class CycleService {
           cycleLength: this.cycleLength(),
           periodLength: this.periodLength(),
           initialWeight: this.initialWeight(),
+          useFixedCycleRanges: this.useFixedCycleRanges(),
         })
       );
     } catch {
@@ -273,5 +280,15 @@ export class CycleService {
     );
 
     return Math.round((endUtc - startUtc) / 86400000);
+  }
+  setFixedCycleRanges(value: boolean): void {
+    this.useFixedCycleRanges.set(value);
+
+    this.persistData();
+  }
+
+  setInitialWeight(value: number | null): void {
+    this.initialWeight.set(value);
+    this.persistData();
   }
 }

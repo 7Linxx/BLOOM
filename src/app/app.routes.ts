@@ -3,6 +3,12 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   {
+    path: 'perfil',
+    title: 'BLOOM | Mi perfil',
+    loadComponent: () =>
+      import('./Pages/perfil/perfil').then(m => m.Perfil)
+  },
+  {
     path: 'articulos',
     title: 'Bloom | Artículos',
     loadComponent: () =>

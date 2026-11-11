@@ -1,0 +1,498 @@
+<main class="profile-page">
+
+  <!-- ENCABEZADO -->
+  <section class="profile-hero">
+    <div class="hero-content">
+      <span class="hero-eyebrow">TU ESPACIO PERSONAL</span>
+
+      <h1>Hola, <span>{{ displayName }}</span> ♡</h1>
+
+      <p>
+        Aquí puedes administrar tu información, personalizar tus
+        preferencias de seguimiento y decidir cómo cuidar tu privacidad.
+      </p>
+    </div>
+
+    <div class="hero-decoration">
+      <span class="hero-flower">✿</span>
+      <span class="hero-heart">♡</span>
+      <span class="hero-star">✧</span>
+    </div>
+  </section>
+
+  <!-- RESUMEN DEL PERFIL -->
+  <section class="profile-summary">
+    <div class="profile-avatar">
+      <span>{{ initials }}</span>
+      <span class="avatar-flower">✿</span>
+    </div>
+
+    <div class="summary-info">
+      <span class="summary-label">MI PERFIL BLOOM</span>
+      <h2>{{ displayName }}</h2>
+      <p>{{ fullName }}</p>
+
+      <span class="summary-age" *ngIf="age !== null">
+        {{ age }} años
+      </span>
+    </div>
+
+    
+  </section>
+
+  <!-- MENSAJES -->
+  <div class="feedback success-message" *ngIf="savedMessage">
+    <span>♡</span>
+    {{ savedMessage }}
+  </div>
+
+  <div class="feedback error-message" *ngIf="errorMessage">
+    <span>!</span>
+    {{ errorMessage }}
+  </div>
+
+  <!-- INFORMACIÓN PERSONAL -->
+  <section class="profile-section">
+    <div class="section-heading">
+      <div>
+        <span class="section-kicker">01 · SOBRE TI</span>
+        <h2>Mi información personal</h2>
+        <p>Administra los datos asociados a tu cuenta.</p>
+      </div>
+
+      <span class="section-decoration">♡</span>
+    </div>
+    <!-- RESUMEN COMPACTO CUANDO EL FORMULARIO ESTÁ CERRADO -->
+    <div class="profile-card compact-profile-card" *ngIf="!editing">
+      <div class="compact-card-heading">
+        <div>
+          <h3>Tu información personal</h3>
+          <p>Un resumen de los datos que tienes registrados.</p>
+        </div>
+
+        <button
+          type="button"
+          class="edit-summary-button"
+          (click)="editProfile()"
+        >
+          <span>✎</span>
+          Editar perfil
+        </button>
+      </div>
+
+      <div class="compact-profile-grid">
+        <div class="compact-profile-item">
+          <span>Nombre completo</span>
+          <strong>{{ fullName }}</strong>
+        </div>
+
+        <div class="compact-profile-item">
+          <span>Apodo</span>
+          <strong>{{ profile.apodo || 'Sin registrar' }}</strong>
+        </div>
+
+        <div class="compact-profile-item">
+          <span>Fecha de nacimiento</span>
+          <strong>{{ profile.fechaNacimiento || 'Sin registrar' }}</strong>
+        </div>
+
+        <div class="compact-profile-item">
+          <span>Correo electrónico</span>
+          <strong>{{ profile.email || 'Sin registrar' }}</strong>
+        </div>
+
+        <div class="compact-profile-item">
+          <span>Peso actual</span>
+          <strong>
+            {{ profile.pesoKg !== null ? profile.pesoKg + ' kg' : 'Sin registrar' }}
+          </strong>
+        </div>
+
+        <div class="compact-profile-item">
+          <span>Altura</span>
+          <strong>
+            {{ profile.alturaCm !== null ? profile.alturaCm + ' cm' : 'Sin registrar' }}
+          </strong>
+        </div>
+      </div>
+    </div>
+    <div class="profile-card" *ngIf="editing">
+
+      <div class="card-heading">
+        <div class="card-icon">✿</div>
+
+        <div>
+          <h3>Datos personales</h3>
+          <p>Tu información es personal y puedes actualizarla.</p>
+        </div>
+      </div>
+
+      <div class="profile-form">
+
+        <div class="form-field">
+          <label for="primerNombre">Primer nombre</label>
+          <input
+            id="primerNombre"
+            type="text"
+            [(ngModel)]="profile.primerNombre"
+            [disabled]="!editing"
+            maxlength="40"
+            placeholder="Tu primer nombre"
+          />
+        </div>
+
+        <div class="form-field">
+          <label for="segundoNombre">Segundo nombre</label>
+          <input
+            id="segundoNombre"
+            type="text"
+            [(ngModel)]="profile.segundoNombre"
+            [disabled]="!editing"
+            maxlength="40"
+            placeholder="Tu segundo nombre"
+          />
+        </div>
+
+        <div class="form-field">
+          <label for="primerApellido">Primer apellido</label>
+          <input
+            id="primerApellido"
+            type="text"
+            [(ngModel)]="profile.primerApellido"
+            [disabled]="!editing"
+            maxlength="40"
+            placeholder="Tu primer apellido"
+          />
+        </div>
+
+        <div class="form-field">
+          <label for="segundoApellido">Segundo apellido</label>
+          <input
+            id="segundoApellido"
+            type="text"
+            [(ngModel)]="profile.segundoApellido"
+            [disabled]="!editing"
+            maxlength="40"
+            placeholder="Tu segundo apellido"
+          />
+        </div>
+
+        <div class="form-field">
+          <label for="apodo">Apodo</label>
+
+          <input
+            id="apodo"
+            type="text"
+            [(ngModel)]="profile.apodo"
+            [disabled]="!editing"
+            maxlength="30"
+            placeholder="¿Cómo quieres que te llamemos?"
+          />
+
+          <span class="field-hint">
+            Este será el nombre que BLOOM mostrará en la aplicación.
+          </span>
+        </div>
+
+        <div class="form-field">
+          <label for="fechaNacimiento">Fecha de nacimiento</label>
+
+          <input
+            id="fechaNacimiento"
+            type="date"
+            [(ngModel)]="profile.fechaNacimiento"
+            [disabled]="!editing"
+          />
+        </div>
+
+        <div class="form-field">
+          <label for="email">Correo electrónico</label>
+
+          <div class="readonly-field">
+            <input
+              id="email"
+              type="email"
+              [(ngModel)]="profile.email"
+              disabled
+              placeholder="Correo vinculado a tu cuenta"
+            />
+
+            <span class="lock-icon">♧</span>
+          </div>
+
+          <span class="field-hint">
+            Tu correo no puede modificarse desde el perfil.
+          </span>
+        </div>
+
+      </div>
+
+      <div class="form-divider"></div>
+
+      <div class="card-heading body-heading">
+        <div class="card-icon peach-icon">♡</div>
+
+        <div>
+          <h3>Datos corporales</h3>
+          <p>Puedes actualizar estos datos cuando lo necesites.</p>
+        </div>
+      </div>
+
+      <div class="profile-form body-form">
+
+        <div class="form-field">
+          <label for="pesoKg">Peso actual (kg)</label>
+
+          <input
+            id="pesoKg"
+            type="number"
+            min="1"
+            max="500"
+            step="0.1"
+            [(ngModel)]="profile.pesoKg"
+            [disabled]="!editing"
+            placeholder="Ej. 58.5"
+          />
+        </div>
+
+        <div class="form-field">
+          <label for="alturaCm">Altura (cm)</label>
+
+          <input
+            id="alturaCm"
+            type="number"
+            min="50"
+            max="250"
+            step="0.1"
+            [(ngModel)]="profile.alturaCm"
+            [disabled]="!editing"
+            placeholder="Ej. 165"
+          />
+        </div>
+
+      </div>
+
+      <div class="form-actions" *ngIf="editing">
+        <button
+          type="button"
+          class="cancel-button"
+          (click)="cancelEditing()"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          class="save-button"
+          (click)="saveProfile()"
+        >
+          Guardar cambios
+          <span>♡</span>
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- PREFERENCIAS DEL CICLO -->
+  <section class="profile-section">
+    <div class="section-heading">
+      <div>
+        <span class="section-kicker">02 · TU SEGUIMIENTO</span>
+        <h2>Preferencias del ciclo</h2>
+        <p>Elige cómo quieres que BLOOM realice tus predicciones.</p>
+      </div>
+
+      <span class="section-decoration">☼</span>
+    </div>
+
+    <div class="preference-card">
+
+      <div class="preference-intro">
+        <div class="preference-icon">◷</div>
+
+        <div>
+          <h3>Método de predicción</h3>
+          <p>
+            Puedes elegir entre una duración fija o una estimación
+            calculada a partir de tus menstruaciones registradas.
+          </p>
+        </div>
+      </div>
+
+      <div class="prediction-options">
+
+        <label
+          class="prediction-option"
+          [class.selected]="useFixedCycleRanges"
+        >
+          <input
+            type="radio"
+            name="prediction"
+            [checked]="useFixedCycleRanges"
+            (change)="changePredictionPreference(true)"
+          />
+
+          <span class="option-radio"></span>
+
+          <span class="option-content">
+            <strong>Usar duración fija</strong>
+            <span>
+              Utiliza el valor de duración del ciclo definido en tu
+              registro inicial.
+            </span>
+          </span>
+
+          <span class="option-value">
+            {{ fixedCycleLength }} días
+          </span>
+        </label>
+
+        <label
+          class="prediction-option"
+          [class.selected]="!useFixedCycleRanges"
+        >
+          <input
+            type="radio"
+            name="prediction"
+            [checked]="!useFixedCycleRanges"
+            (change)="changePredictionPreference(false)"
+          />
+
+          <span class="option-radio"></span>
+
+          <span class="option-content">
+            <strong>Predicción automática</strong>
+            <span>
+              Calcula la duración utilizando los ciclos más recientes
+              que hayas registrado.
+            </span>
+          </span>
+
+          <span class="option-value">
+            {{ estimatedCycleLength }} días
+          </span>
+        </label>
+
+      </div>
+
+      <div class="prediction-explanation">
+        <span>✧</span>
+        {{ predictionDescription }}
+      </div>
+
+      <div class="history-protection">
+        <span>♡</span>
+        <p>
+          Cambiar esta preferencia no modifica tus menstruaciones,
+          síntomas ni registros anteriores.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- AJUSTES -->
+  <section class="profile-section">
+    <div class="section-heading">
+      <div>
+        <span class="section-kicker">03 · CONFIGURACIÓN</span>
+        <h2>Ajustes de la aplicación</h2>
+        <p>Administra tus preferencias y el uso de tu información.</p>
+      </div>
+
+      <span class="section-decoration">⚙</span>
+    </div>
+
+    <div class="settings-card">
+
+      <button
+        type="button"
+        class="settings-toggle"
+        (click)="toggleSettings()"
+        [attr.aria-expanded]="settingsExpanded"
+      >
+        <div class="settings-toggle-icon">⚙</div>
+
+        <div class="settings-toggle-content">
+          <strong>Privacidad y uso de información</strong>
+          <span>Controla qué datos relacionados con tu ciclo permites compartir.</span>
+        </div>
+
+        <span class="settings-arrow" [class.rotated]="settingsExpanded">
+         ⌄
+        </span>
+      </button>
+
+      <div class="privacy-content" *ngIf="settingsExpanded">
+
+        <div class="privacy-intro">
+          <span class="privacy-heart">♡</span>
+
+          <div>
+            <h3>Tú decides qué compartir</h3>
+            <p>
+              Activa únicamente la información que autorizas compartir.
+              Puedes cambiar estas preferencias cuando quieras.
+            </p>
+          </div>
+        </div>
+
+        <div class="privacy-list">
+
+          <div
+            class="privacy-item"
+            *ngFor="let item of privacyItems"
+          >
+            <div class="privacy-item-text">
+              <strong>{{ item.title }}</strong>
+              <span>{{ item.description }}</span>
+            </div>
+
+            <label class="switch">
+              <input
+                type="checkbox"
+                [(ngModel)]="privacy[item.key]"
+                (change)="savePrivacyPreferences()"
+              />
+
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+
+        </div>
+
+        <div class="privacy-warning">
+          <span>♡</span>
+          <p>
+            Desactivar una opción significa que no autorizas compartir
+            ese tipo de información. Tus registros personales no se
+            eliminan ni se modifican.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- AVISO -->
+  <section class="profile-footer-card">
+    <span class="footer-heart">♡</span>
+
+    <div>
+      <h3>Tu información, tus decisiones</h3>
+      <p>
+        En BLOOM queremos que tengas el control de tus datos y de
+        la forma en que utilizas tu espacio personal.
+      </p>
+    </div>
+
+    <span class="footer-flower">✿</span>
+  </section>
+
+  <footer class="profile-footer">
+    Hecho para acompañarte, respetando tu privacidad. ♡
+  </footer>
+
+</main>

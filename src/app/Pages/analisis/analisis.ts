@@ -266,12 +266,10 @@ export class Analisis {
   }
 
   get estimatedCycleDuration(): number {
-    return this.averageCycle ??
-      this.cycleService.getEstimatedCycleLength(
-        this.cycleService.getPeriodStarts()
-      );
+    return this.cycleService.getEstimatedCycleLength(
+      this.cycleService.getPeriodStarts()
+    );
   }
-
   get estimatedPeriodDuration(): number {
     return this.averagePeriod ??
       this.cycleService.getEstimatedPeriodLength();
