@@ -1,1 +1,306 @@
-<p>articulos works!</p>
+<main class="articles-page">
+
+  <!-- ENCABEZADO -->
+  <section class="articles-hero">
+    <div class="hero-content">
+      <span class="hero-eyebrow">APRENDE · DESCUBRE · CUÍDATE</span>
+
+      <h1>
+        Un espacio para <span>conocerte</span>
+      </h1>
+
+      <p>
+        Información y consejos sobre salud menstrual, bienestar,
+        autocuidado y mucho más. Aprende a escuchar tu cuerpo.
+      </p>
+
+      <div class="hero-decoration-text">
+        <span>♡</span>
+        Con cariño, BLOOM.
+      </div>
+    </div>
+
+    <div class="hero-illustration">
+      <span class="hero-flower">✿</span>
+      <span class="hero-heart">♡</span>
+      <span class="hero-star">✧</span>
+      <span class="hero-small-flower">❀</span>
+    </div>
+  </section>
+
+  <!-- BÚSQUEDA -->
+  <section class="articles-toolbar">
+    <div class="toolbar-heading">
+      <span class="toolbar-kicker">BIBLIOTECA BLOOM</span>
+      <h2>Explora nuestros artículos</h2>
+      <p>Encuentra información que te ayude a cuidar de ti.</p>
+    </div>
+
+    <div class="search-box">
+      <span class="search-icon">⌕</span>
+
+      <input
+        type="text"
+        placeholder="Buscar un artículo..."
+        [(ngModel)]="searchText"
+        aria-label="Buscar artículos"
+      />
+
+      <button
+        *ngIf="searchText"
+        type="button"
+        class="clear-search"
+        (click)="searchText = ''"
+        aria-label="Limpiar búsqueda"
+      >
+        ×
+      </button>
+    </div>
+  </section>
+
+  <!-- CATEGORÍAS -->
+  <section class="categories-section">
+    <span class="categories-label">EXPLORAR POR CATEGORÍA</span>
+
+    <div class="categories-list">
+      <button
+        *ngFor="let category of categories"
+        type="button"
+        [class.active]="selectedCategory === category"
+        (click)="selectCategory(category)"
+      >
+        {{ category }}
+      </button>
+    </div>
+  </section>
+
+  <!-- LISTADO DE ARTÍCULOS -->
+  <section class="articles-section">
+
+    <div class="articles-section-heading">
+      <div>
+        <span class="section-kicker">PARA TI</span>
+        <h2>
+          {{ selectedCategory === 'Todos' ? 'Nuestros artículos' : selectedCategory }}
+        </h2>
+      </div>
+
+      <span class="articles-count">
+        {{ filteredArticles.length }}
+        {{ filteredArticles.length === 1 ? 'artículo' : 'artículos' }}
+      </span>
+    </div>
+
+    <div class="articles-grid" *ngIf="filteredArticles.length > 0">
+
+      <article
+        class="article-card"
+        *ngFor="let article of filteredArticles"
+      >
+
+        <!-- IMAGEN -->
+        <div class="article-image">
+
+          <img
+            *ngIf="article.imageUrl; else imagePlaceholder"
+            [src]="article.imageUrl"
+            [alt]="article.title"
+          />
+
+          <ng-template #imagePlaceholder>
+            <div class="image-placeholder">
+              <span class="placeholder-flower">✿</span>
+              <span class="placeholder-heart">♡</span>
+              <span class="placeholder-label">BLOOM</span>
+            </div>
+          </ng-template>
+
+          <span class="article-category">
+            {{ article.category }}
+          </span>
+        </div>
+
+        <!-- CONTENIDO -->
+        <div class="article-content">
+
+          <div class="article-meta">
+            <span class="meta-icon">✧</span>
+            Publicado en BLOOM:
+            {{ formatDate(article.createdAt) }}
+          </div>
+
+          <h3>{{ article.title }}</h3>
+
+          <p class="article-summary">
+            {{ article.summary }}
+          </p>
+
+          <div class="article-source">
+            <span>Fuente:</span>
+            {{ article.source }}
+          </div>
+
+          <div class="article-actions">
+            <a
+              class="read-article"
+              [href]="article.url"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Leer artículo original
+              <span>↗</span>
+            </a>
+
+            <button
+              type="button"
+              class="comments-button"
+              [class.active]="selectedArticleId === article.id"
+              (click)="toggleComments(article.id)"
+            >
+              <span>♡</span>
+              Comentarios
+              <span class="comment-number">
+                {{ getCommentCount(article.id) }}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- COMENTARIOS -->
+        <div
+          class="comments-section"
+          *ngIf="selectedArticleId === article.id"
+        >
+
+          <div class="comments-heading">
+            <div>
+              <span class="section-kicker">COMUNIDAD BLOOM</span>
+              <h4>Comentarios</h4>
+            </div>
+
+            <span class="comments-decoration">♡</span>
+          </div>
+
+          <div
+            class="comments-empty"
+            *ngIf="getCommentCount(article.id) === 0"
+          >
+            <span>✿</span>
+            <p>Aún no hay comentarios. ¡Puedes ser la primera en compartir tu opinión!</p>
+          </div>
+
+          <div class="comments-list" *ngIf="getCommentCount(article.id) > 0">
+
+            <div
+              class="comment-item"
+              *ngFor="let comment of getComments(article.id)"
+            >
+              <div class="comment-avatar">
+                {{ comment.nickname.charAt(0).toUpperCase() }}
+              </div>
+
+              <div class="comment-content">
+                <div class="comment-top">
+                  <strong>{{ comment.nickname }}</strong>
+                  <span>{{ formatDate(comment.createdAt) }}</span>
+                </div>
+
+                <p>{{ comment.message }}</p>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- FORMULARIO DE COMENTARIO -->
+          <form
+            class="comment-form"
+            (ngSubmit)="addComment(article.id)"
+          >
+            <label for="nickname-{{ article.id }}">
+              Tu apodo
+            </label>
+
+            <input
+              id="nickname-{{ article.id }}"
+              type="text"
+              name="nickname-{{ article.id }}"
+              placeholder="¿Cómo te gustaría aparecer?"
+              maxlength="30"
+              [(ngModel)]="nickname"
+              required
+            />
+
+            <label for="comment-{{ article.id }}">
+              Escribe tu comentario
+            </label>
+
+            <textarea
+              id="comment-{{ article.id }}"
+              name="comment-{{ article.id }}"
+              placeholder="Comparte tu opinión..."
+              rows="3"
+              maxlength="500"
+              [(ngModel)]="commentDraft"
+              required
+            ></textarea>
+
+            <div class="comment-form-bottom">
+              <span>Comparte siempre con respeto ♡</span>
+
+              <button
+                type="submit"
+                [disabled]="!nickname.trim() || !commentDraft.trim()"
+              >
+                Publicar comentario
+                <span>♡</span>
+              </button>
+            </div>
+          </form>
+
+        </div>
+
+      </article>
+
+    </div>
+
+    <!-- SIN RESULTADOS -->
+    <div class="no-results" *ngIf="filteredArticles.length === 0">
+      <span>❀</span>
+      <h3>No encontramos artículos</h3>
+      <p>Intenta con otra búsqueda o selecciona una categoría diferente.</p>
+
+      <button
+        type="button"
+        (click)="searchText = ''; selectedCategory = 'Todos'"
+      >
+        Ver todos los artículos
+      </button>
+    </div>
+
+  </section>
+
+  <!-- AVISO INFORMATIVO -->
+  <section class="articles-disclaimer">
+    <div class="disclaimer-icon">♡</div>
+
+    <div>
+      <h3>Información para acompañarte</h3>
+      <p>
+        Los artículos de BLOOM provienen de fuentes externas y tienen
+        fines informativos y educativos. Su contenido no sustituye
+        la valoración, el diagnóstico ni las recomendaciones de un
+        profesional de la salud.
+      </p>
+    </div>
+
+    <span class="disclaimer-flower">✿</span>
+  </section>
+
+  <!-- PIE -->
+  <footer class="articles-footer">
+    <span>✿</span>
+    Aprende a conocerte, un día a la vez.
+    <span>♡</span>
+  </footer>
+
+</main>

@@ -7,11 +7,21 @@ export type MenstrualFlow =
   | 'variable'
   | 'no_se';
 
+export type DailyMood = 'general' | 'positivo' | 'negativo';
+
 export interface DayRecord {
   isPeriod: boolean;
   symptoms: string[];
   flow: MenstrualFlow | null;
   note: string;
+
+  // Información adicional del registro diario
+  flowIntensity?: number;
+  mood?: DailyMood | null;
+  sexualActivity?: boolean | null;
+  contraceptiveMethod?: string | null;
+  temperature?: number | null;
+  weight?: number | null;
 }
 
 interface SurveyCycle {
@@ -23,6 +33,7 @@ interface CycleSurveyData {
   duracionCiclo: number | null;
   duracionPeriodo: number | null;
   ciclos: SurveyCycle[];
+  pesoKg?: number | null;
 }
 
 @Injectable({
@@ -36,6 +47,7 @@ export class CycleService {
 
   readonly cycleLength = signal(28);
   readonly periodLength = signal(5);
+  readonly initialWeight = signal<number | null>(null);
 
   constructor() {
     this.loadData();
@@ -48,6 +60,10 @@ export class CycleService {
 
     if (data.duracionPeriodo !== null) {
       this.periodLength.set(data.duracionPeriodo);
+    }
+
+    if (data.pesoKg !== undefined && data.pesoKg !== null) {
+      this.initialWeight.set(data.pesoKg);
     }
 
     const updatedRecords = { ...this.records() };
@@ -69,6 +85,7 @@ export class CycleService {
         const key = this.toDateKey(current);
 
         updatedRecords[key] = {
+          ...updatedRecords[key],
           isPeriod: true,
           symptoms: updatedRecords[key]?.symptoms ?? [],
           flow: updatedRecords[key]?.flow ?? null,
@@ -90,7 +107,13 @@ export class CycleService {
       record.isPeriod ||
       record.symptoms.length > 0 ||
       record.flow !== null ||
-      record.note.trim().length > 0;
+      record.note.trim().length > 0 ||
+      (record.flowIntensity ?? 0) > 0 ||
+      record.mood != null ||
+      record.sexualActivity != null ||
+      record.contraceptiveMethod != null ||
+      record.temperature != null ||
+      record.weight != null;
 
     if (hasInformation) {
       updatedRecords[key] = {
@@ -101,6 +124,14 @@ export class CycleService {
     } else {
       delete updatedRecords[key];
     }
+
+    this.records.set(updatedRecords);
+    this.persistData();
+  }
+
+  deleteDay(key: string): void {
+    const updatedRecords = { ...this.records() };
+    delete updatedRecords[key];
 
     this.records.set(updatedRecords);
     this.persistData();
@@ -174,6 +205,10 @@ export class CycleService {
         if (typeof settings.periodLength === 'number') {
           this.periodLength.set(settings.periodLength);
         }
+
+        if (typeof settings.initialWeight === 'number') {
+          this.initialWeight.set(settings.initialWeight);
+        }
       }
     } catch {
       this.records.set({});
@@ -196,6 +231,7 @@ export class CycleService {
         JSON.stringify({
           cycleLength: this.cycleLength(),
           periodLength: this.periodLength(),
+          initialWeight: this.initialWeight(),
         })
       );
     } catch {

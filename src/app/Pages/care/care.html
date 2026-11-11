@@ -1,1 +1,370 @@
-<p>care works!</p>
+
+<main class="care-page">
+
+  <section class="care-heading">
+    <div>
+      <span class="eyebrow">TU BIENESTAR, DÍA A DÍA</span>
+      <h1>Mi diario <span>Bloom</span></h1>
+      <p>Un espacio para registrar cómo te sientes y conocer mejor tu cuerpo.</p>
+    </div>
+
+    <div class="heading-decoration">🌷</div>
+  </section>
+
+  <section class="date-card">
+    <div class="date-information">
+      <span class="date-icon">📅</span>
+      <div>
+        <h2>Tu registro diario</h2>
+        <p>{{ selectedDateLabel }}</p>
+      </div>
+    </div>
+
+    <div class="date-selector">
+      <label for="record-date">Seleccionar fecha</label>
+      <input
+        id="record-date"
+        type="date"
+        [max]="today"
+        [value]="selectedDate"
+        (change)="selectDate($any($event.target).value)"
+      />
+    </div>
+  </section>
+
+  <div class="readonly-message" *ngIf="!canEditSelected">
+    <span>🔒</span>
+    No puedes registrar información en fechas futuras.
+  </div>
+
+  <div class="care-layout">
+
+    <div class="form-column">
+
+      <!-- MENSTRUACIÓN -->
+      <section class="care-card">
+        <div class="section-heading">
+          <span class="section-icon">🌸</span>
+          <div>
+            <h2>Menstruación</h2>
+            <p>¿Tuviste sangrado menstrual hoy?</p>
+          </div>
+        </div>
+
+        <div class="choice-row">
+          <button
+            type="button"
+            class="choice-button"
+            [class.active]="isPeriod"
+            [disabled]="!canEditSelected"
+            (click)="onPeriodChange(true)"
+          >
+            <span>🩸</span>
+            Sí
+          </button>
+
+          <button
+            type="button"
+            class="choice-button"
+            [class.active]="!isPeriod"
+            [disabled]="!canEditSelected"
+            (click)="onPeriodChange(false)"
+          >
+            <span>🌿</span>
+            No
+          </button>
+        </div>
+
+        <div class="flow-section" *ngIf="isPeriod">
+          <h3>Intensidad del flujo</h3>
+          <p class="helper-text">Selecciona la intensidad de tu sangrado.</p>
+
+          <div class="flow-options">
+            <button
+              type="button"
+              *ngFor="let level of flowLevels"
+              [class.active]="flowIntensity === level.value"
+              [disabled]="!canEditSelected"
+              (click)="setFlow(level.value)"
+            >
+              <span class="flow-number">{{ level.value }}</span>
+              <span>{{ level.label }}</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SÍNTOMAS -->
+      <section class="care-card">
+        <div class="section-heading">
+          <span class="section-icon">🩷</span>
+          <div>
+            <h2>Síntomas</h2>
+            <p>¿Cómo se ha sentido tu cuerpo?</p>
+          </div>
+        </div>
+
+        <div class="symptom-group" *ngFor="let group of symptomGroups">
+          <h3>{{ group.title }}</h3>
+
+          <div class="symptom-grid">
+            <label
+              class="symptom-option"
+              *ngFor="let symptom of group.symptoms"
+              [class.selected]="isSymptomSelected(symptom)"
+            >
+              <input
+                type="checkbox"
+                [checked]="isSymptomSelected(symptom)"
+                [disabled]="!canEditSelected"
+                (change)="toggleSymptom(symptom, $any($event.target).checked)"
+              />
+              <span>{{ symptom }}</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- ESTADO DE ÁNIMO -->
+      <section class="care-card">
+        <div class="section-heading">
+          <span class="section-icon">☀️</span>
+          <div>
+            <h2>Estado de ánimo</h2>
+            <p>¿Cómo te sentiste emocionalmente?</p>
+          </div>
+        </div>
+
+        <div class="mood-options">
+          <button
+            type="button"
+            class="mood-option"
+            [class.active]="mood === 'positivo'"
+            [disabled]="!canEditSelected"
+            (click)="setMood('positivo')"
+          >
+            <span>😊</span>
+            <strong>Positivo</strong>
+            <small>Me siento bien</small>
+          </button>
+
+          <button
+            type="button"
+            class="mood-option"
+            [class.active]="mood === 'general'"
+            [disabled]="!canEditSelected"
+            (click)="setMood('general')"
+          >
+            <span>😐</span>
+            <strong>General</strong>
+            <small>Un día normal</small>
+          </button>
+
+          <button
+            type="button"
+            class="mood-option"
+            [class.active]="mood === 'negativo'"
+            [disabled]="!canEditSelected"
+            (click)="setMood('negativo')"
+          >
+            <span>😔</span>
+            <strong>Negativo</strong>
+            <small>No me siento bien</small>
+          </button>
+        </div>
+      </section>
+
+      <!-- ACTIVIDAD SEXUAL -->
+      <section class="care-card">
+        <div class="section-heading">
+          <span class="section-icon">💕</span>
+          <div>
+            <h2>Actividad sexual</h2>
+            <p>¿Tuviste actividad sexual hoy?</p>
+          </div>
+        </div>
+
+        <div class="choice-row">
+          <button
+            type="button"
+            class="choice-button"
+            [class.active]="sexualActivity === true"
+            [disabled]="!canEditSelected"
+            (click)="sexualActivity = true"
+          >
+            Sí
+          </button>
+
+          <button
+            type="button"
+            class="choice-button"
+            [class.active]="sexualActivity === false"
+            [disabled]="!canEditSelected"
+            (click)="sexualActivity = false"
+          >
+            No
+          </button>
+        </div>
+
+        <div class="field-group">
+          <label for="contraceptive">Método anticonceptivo</label>
+          <select
+            id="contraceptive"
+            [(ngModel)]="contraceptiveMethod"
+            [disabled]="!canEditSelected"
+          >
+            <option value="">Seleccionar método</option>
+            <option *ngFor="let option of contraceptiveOptions" [value]="option">
+              {{ option }}
+            </option>
+          </select>
+        </div>
+      </section>
+
+      <!-- MEDICIONES -->
+      <section class="care-card">
+        <div class="section-heading">
+          <span class="section-icon">🌡️</span>
+          <div>
+            <h2>Mediciones diarias</h2>
+            <p>Registra algunos cambios físicos de tu cuerpo.</p>
+          </div>
+        </div>
+
+        <div class="measurements-grid">
+          <div class="field-group">
+            <label for="temperature">Temperatura corporal</label>
+            <div class="input-with-unit">
+              <input
+                id="temperature"
+                type="number"
+                step="0.1"
+                min="30"
+                max="45"
+                placeholder="Ej. 36.5"
+                [(ngModel)]="temperature"
+                [disabled]="!canEditSelected"
+              />
+              <span>°C</span>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label for="weight">Peso corporal</label>
+            <div class="input-with-unit">
+              <input
+                id="weight"
+                type="number"
+                step="0.1"
+                min="1"
+                max="500"
+                placeholder="Ej. 55.0"
+                [(ngModel)]="weight"
+                [disabled]="!canEditSelected"
+              />
+              <span>kg</span>
+            </div>
+            <small>Tu peso inicial puede provenir de tu registro de bienvenida.</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- DIARIO PERSONAL -->
+      <section class="care-card">
+        <div class="section-heading">
+          <span class="section-icon">📖</span>
+          <div>
+            <h2>Mi diario personal</h2>
+            <p>Escribe cualquier detalle que quieras recordar.</p>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="personal-note">Notas del día</label>
+          <textarea
+            id="personal-note"
+            rows="5"
+            placeholder="¿Cómo estuvo tu día? ¿Notaste algún cambio?..."
+            [(ngModel)]="note"
+            [disabled]="!canEditSelected"
+          ></textarea>
+        </div>
+      </section>
+
+      <!-- ACCIONES -->
+      <div class="form-actions" *ngIf="canEditSelected">
+        <button
+          type="button"
+          class="save-button"
+          (click)="saveRecord()"
+        >
+          Guardar registro
+        </button>
+
+        <button
+          type="button"
+          class="delete-button"
+          *ngIf="hasRecord"
+          (click)="deleteRecord()"
+        >
+          Eliminar registro
+        </button>
+      </div>
+
+      <p class="saved-message" *ngIf="savedMessage">
+        {{ savedMessage }}
+      </p>
+
+    </div>
+
+    <!-- HISTORIAL -->
+    <aside class="history-column">
+      <section class="care-card history-card">
+        <div class="section-heading">
+          <span class="section-icon">🗓️</span>
+          <div>
+            <h2>Mi historial</h2>
+            <p>Consulta tus registros anteriores.</p>
+          </div>
+        </div>
+
+        <div class="empty-history" *ngIf="history.length === 0">
+          <span>🌷</span>
+          <p>Aún no tienes registros.</p>
+          <small>Cuando guardes tu primer registro, aparecerá aquí.</small>
+        </div>
+
+        <div class="history-list" *ngIf="history.length > 0">
+          <button
+            type="button"
+            class="history-item"
+            *ngFor="let item of history"
+            [class.active]="selectedDate === item.date"
+            (click)="openRecord(item.date)"
+          >
+            <span class="history-date">
+              {{ item.label }}
+            </span>
+
+            <span class="history-summary">
+              {{ getRecordSummary(item.record) }}
+            </span>
+
+            <span class="history-mood">
+              {{ getMoodEmoji(item.record.mood) }}
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <div class="history-tip">
+        <span>💗</span>
+        <p>
+          Cada registro te ayuda a reconocer patrones y conocer mejor
+          tu ciclo y bienestar.
+        </p>
+      </div>
+    </aside>
+
+  </div>
+</main>

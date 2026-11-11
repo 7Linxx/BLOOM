@@ -1,1 +1,191 @@
-<p>analisis works!</p>
+<main class="analysis-page">
+
+  <section class="analysis-heading">
+    <div class="heading-content">
+      <span class="eyebrow">CONOCE TU CUERPO</span>
+
+      <h1>Tu bienestar en <span>datos</span></h1>
+
+      <p>
+        Un pequeño vistazo a tu ciclo, tus registros y los cambios
+        que has experimentado.
+      </p>
+    </div>
+
+    <div class="heading-decoration">
+      <span class="decoration-flower">✿</span>
+      <span class="decoration-heart">♡</span>
+      <span class="decoration-star">✧</span>
+    </div>
+  </section>
+
+  <section class="analysis-filter">
+    <div>
+      <span class="filter-title">Tu historial</span>
+      <p>Consulta tus estadísticas según el periodo que prefieras.</p>
+    </div>
+
+    <div class="filter-options">
+      <button
+        *ngFor="let option of rangeOptions"
+        type="button"
+        [class.active]="selectedRange === option.value"
+        (click)="changeRange(option.value)"
+      >
+        {{ option.label }}
+      </button>
+    </div>
+  </section>
+
+  <section class="analysis-section">
+    <div class="section-heading">
+      <div>
+        <span class="section-kicker">01 · TU CICLO</span>
+        <h2>Conoce tu ciclo menstrual</h2>
+        <p>Un resumen de la duración y comportamiento de tus ciclos.</p>
+      </div>
+
+      <span class="section-flower">✿</span>
+    </div>
+
+    <div class="indicators-grid">
+      <article
+        class="indicator-card"
+        *ngFor="let indicator of cycleIndicators"
+        [ngClass]="indicator.color"
+      >
+        <div class="indicator-top">
+          <span class="indicator-icon">{{ indicator.icon }}</span>
+          <span class="indicator-decoration">✧</span>
+        </div>
+
+        <p class="indicator-title">{{ indicator.title }}</p>
+        <strong class="indicator-value">{{ indicator.value }}</strong>
+        <span class="indicator-description">
+          {{ indicator.description }}
+        </span>
+      </article>
+    </div>
+
+    <div class="history-note">
+      <span class="note-icon">♡</span>
+
+      <div>
+        <strong>
+          {{ totalCycles }}
+          {{ totalCycles === 1 ? 'ciclo' : 'ciclos' }} completos en este periodo
+        </strong>
+
+        <p>
+          Las estadísticas se calculan únicamente con los registros
+          disponibles.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="analysis-section tracking-section">
+    <div class="section-heading">
+      <div>
+        <span class="section-kicker">02 · SEGUIMIENTO</span>
+        <h2>¿En qué momento estás?</h2>
+        <p>Información sobre tu ciclo actual y las próximas fechas estimadas.</p>
+      </div>
+
+      <span class="section-flower">☼</span>
+    </div>
+
+    <div class="indicators-grid tracking-grid">
+      <article
+        class="indicator-card"
+        *ngFor="let indicator of trackingIndicators"
+        [ngClass]="indicator.color"
+      >
+        <div class="indicator-top">
+          <span class="indicator-icon">{{ indicator.icon }}</span>
+          <span class="indicator-decoration">✧</span>
+        </div>
+
+        <p class="indicator-title">{{ indicator.title }}</p>
+        <strong class="indicator-value">{{ indicator.value }}</strong>
+        <span class="indicator-description">
+          {{ indicator.description }}
+        </span>
+      </article>
+    </div>
+
+    <div class="prediction-card">
+      <div class="prediction-icon">♡</div>
+
+      <div class="prediction-content">
+        <span class="prediction-label">TU PRÓXIMA FECHA</span>
+
+        <h3>
+          {{ nextPeriodDate ? formatDate(nextPeriodDate) : 'Aún no disponible' }}
+        </h3>
+
+        <p>
+          Esta fecha es una estimación basada en tu historial.
+          No representa un registro confirmado de menstruación.
+        </p>
+      </div>
+
+      <span class="prediction-decoration">✿</span>
+    </div>
+  </section>
+
+  <section class="analysis-section personal-section">
+    <div class="section-heading">
+      <div>
+        <span class="section-kicker">03 · CONÓCETE</span>
+        <h2>Lo que nos cuentan tus registros</h2>
+        <p>Pequeños patrones que aparecen en tu información diaria.</p>
+      </div>
+
+      <span class="section-flower">♡</span>
+    </div>
+
+    <div class="personal-card">
+      <div class="personal-icon">✧</div>
+
+      <div class="personal-content">
+        <span class="personal-label">SÍNTOMA MÁS FRECUENTE</span>
+
+        <h3>
+          {{ frequentSymptom || 'Todavía no hay información' }}
+        </h3>
+
+        <p>{{ symptomMessage }}</p>
+      </div>
+
+      <div class="personal-count" *ngIf="frequentSymptom">
+        <strong>{{ frequentSymptomCount }}</strong>
+        <span>registros</span>
+      </div>
+    </div>
+
+    <div class="empty-message" *ngIf="!frequentSymptom">
+      <span>♡</span>
+      <p>
+        Cuando registres tus síntomas diariamente, podrás descubrir
+        cuáles aparecen con mayor frecuencia.
+      </p>
+    </div>
+  </section>
+
+  <section class="calculation-card">
+    <div class="calculation-icon">✿</div>
+
+    <div class="calculation-content">
+      <span class="calculation-label">¿CÓMO SE CALCULAN TUS DATOS?</span>
+      <h3>{{ calculationMethod }}</h3>
+      <p>{{ calculationDescription }}</p>
+    </div>
+  </section>
+
+  <footer class="analysis-footer">
+    <span>♡</span>
+    Cada cuerpo tiene su propio ritmo. BLOOM te acompaña a conocerlo.
+  </footer>
+
+</main>
