@@ -280,7 +280,7 @@ export class Perfil {
         horasSueno,
         duracionCiclo,
         duracionMenstruacion
-      } as any);
+      });
 
       this.originalCycleSettings = { ...this.cycleSettings };
       this.duracionFija = duracionCiclo;
@@ -360,7 +360,7 @@ export class Perfil {
     this.changingPassword = true;
 
     try {
-      await (this.api as any).cambiarContrasenia(this.sesion.idUsuario, actual, nueva);
+      await this.api.cambiarContrasenia(this.sesion.idUsuario, actual, nueva);
       this.passwordForm = { actual: '', nueva: '', confirmar: '' };
       this.passwordMessage = { tipo: 'ok', texto: 'Tu contraseña se actualizó. ♡' };
     } catch (error) {
@@ -374,8 +374,8 @@ export class Perfil {
   }
 
   logout(): void {
-    (this.sesion as any).cerrar();
-    this.router.navigate(['/']);
+    this.sesion.cerrar();
+    this.router.navigate(['/login']);
   }
 
   openDelete(): void {
@@ -399,7 +399,7 @@ export class Perfil {
     this.deletingAccount = true;
 
     try {
-      await (this.api as any).eliminarUsuaria(this.sesion.idUsuario);
+      await this.api.eliminarUsuaria(this.sesion.idUsuario);
 
       try {
         localStorage.removeItem(this.privacyKey);
@@ -425,7 +425,7 @@ export class Perfil {
       this.original = this.aPerfil(usuaria);
       this.profile = { ...this.original };
 
-      const ajustes: any = await this.api.verAjustes(idUsuario);
+      const ajustes = await this.api.verAjustes(idUsuario);
       this.useFixedCycleRanges = ajustes.metodoCalculo === 'MANUAL';
       this.duracionFija = ajustes.duracionCiclo;
 

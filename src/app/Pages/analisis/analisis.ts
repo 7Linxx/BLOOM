@@ -3,7 +3,7 @@ import { Component, inject } from '@angular/core';
 
 import { BloomApi, mensajeDeError } from '../../Core/Services/bloom-api.service';
 import { Sesion } from '../../Core/Services/sesion.service';
-import { CicloActual, EstadisticaPeriodo, EstadisticaResumen } from '../../Core/modelos';
+import { CicloActual, CicloMenstrual, EstadisticaPeriodo, EstadisticaResumen } from '../../Core/modelos';
 import { textoAFecha } from '../../Core/mapeos';
 
 type PeriodRange = '3m' | '6m' | '12m' | 'all';
@@ -257,8 +257,9 @@ export class Analisis {
 
   private async cargarCiclos(): Promise<void> {
     try {
-      const lista: any[] = await (this.api as any).verCiclos(this.sesion.idUsuario);
+      const lista = await this.api.verCiclos(this.sesion.idUsuario);
       this.cycleRows = (lista ?? [])
+        .filter(ciclo => ciclo.estado !== 'ESTIMADO')
         .map(ciclo => this.aFila(ciclo))
         .sort((a, b) => (b.start?.getTime() ?? 0) - (a.start?.getTime() ?? 0));
     } catch {
@@ -266,16 +267,16 @@ export class Analisis {
     }
   }
 
-  private aFila(ciclo: any): CycleRow {
-    const start = ciclo?.fechaInicio ? textoAFecha(ciclo.fechaInicio) : null;
-    const end = ciclo?.fechaFin ? textoAFecha(ciclo.fechaFin) : null;
+  private aFila(ciclo: CicloMenstrual): CycleRow {
+    const start = ciclo.fechaInicio ? textoAFecha(ciclo.fechaInicio) : null;
+    const end = ciclo.fechaFin ? textoAFecha(ciclo.fechaFin) : null;
 
-    let days: number | null = ciclo?.duracion ?? ciclo?.duracionCiclo ?? null;
+    let days: number | null = ciclo.duracion ?? null;
     if (days === null && start && end) {
       days = Math.round((end.getTime() - start.getTime()) / 86400000) + 1;
     }
 
-    return { start, end, days, inProgress: !end };
+    return { start, end, days, inProgress: ciclo.estado === 'EN_CURSO' };
   }
 
   private anioMes(fecha: Date): string {

@@ -15,7 +15,7 @@ export interface RegistroUsuaria {
   contrasenia: string;
 }
 
-interface Usuaria {
+export interface Usuaria {
   idUsuario: number;
   primerNombre: string;
   segundoNombre: string | null;
@@ -197,4 +197,14 @@ export interface Articulo {
   fuente: { nombre: string; url: string } | null;
   totalComentarios: number;
   comentariosRecientes: Comentario[];
+}
+
+export interface CicloMenstrual {
+  idCicloMenstrual: number;
+  fechaInicio: string;
+  fechaFin: string | null;
+  duracion: number | null;
+  estado: 'FINALIZADO' | 'EN_CURSO' | 'ESTIMADO';
+  origen: string;
+  menstruacion: Menstruacion | null;
 }

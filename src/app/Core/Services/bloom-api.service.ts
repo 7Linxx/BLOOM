@@ -10,6 +10,7 @@ import {
   Calendario,
   Catalogos,
   CicloActual,
+  CicloMenstrual,
   Comentario,
   EncuestaInicial,
   EstadisticaPeriodo,
@@ -67,6 +68,14 @@ export class BloomApi {
     return this.put<Ajustes>(`/usuarias/${idUsuario}/ajustes`, ajustes);
   }
 
+  cambiarContrasenia(idUsuario: number, contraseniaActual: string, contraseniaNueva: string): Promise<void> {
+    return this.put<void>(`/usuarias/${idUsuario}/contrasenia`, { contraseniaActual, contraseniaNueva });
+  }
+
+  eliminarUsuaria(idUsuario: number): Promise<void> {
+    return this.delete<void>(`/usuarias/${idUsuario}`);
+  }
+
   llenarEncuesta(idUsuario: number, encuesta: EncuestaInicial): Promise<EncuestaInicial> {
     return this.post<EncuestaInicial>(`/usuarias/${idUsuario}/encuesta`, encuesta);
   }
@@ -85,6 +94,10 @@ export class BloomApi {
       }
       throw error;
     }
+  }
+
+  verCiclos(idUsuario: number): Promise<CicloMenstrual[]> {
+    return this.get<CicloMenstrual[]>(`/usuarias/${idUsuario}/ciclos`);
   }
 
   verRegistros(idUsuario: number): Promise<RegistroDiario[]> {
@@ -140,6 +153,15 @@ export class BloomApi {
     return this.post<Comentario>(`/articulos/${idArticulo}/comentarios`, { idUsuario, contenido });
   }
 
+  editarComentario(idArticulo: string, idComentario: string, idUsuario: number, contenido: string): Promise<void> {
+    return this.put<void>(`/articulos/${idArticulo}/comentarios/${idComentario}`, { idUsuario, contenido });
+  }
+
+  eliminarComentario(idArticulo: string, idComentario: string, idUsuario: number): Promise<void> {
+    const params = new HttpParams().set('idUsuario', idUsuario);
+    return this.delete<void>(`/articulos/${idArticulo}/comentarios/${idComentario}`, params);
+  }
+
   private get<T>(ruta: string, params?: HttpParams): Promise<T> {
     return this.ejecutar(this.http.get<RespuestaApi<T>>(API_URL + ruta, { params }));
   }
@@ -152,8 +174,8 @@ export class BloomApi {
     return this.ejecutar(this.http.put<RespuestaApi<T>>(API_URL + ruta, cuerpo));
   }
 
-  private delete<T>(ruta: string): Promise<T> {
-    return this.ejecutar(this.http.delete<RespuestaApi<T>>(API_URL + ruta));
+  private delete<T>(ruta: string, params?: HttpParams): Promise<T> {
+    return this.ejecutar(this.http.delete<RespuestaApi<T>>(API_URL + ruta, { params }));
   }
 
   private async ejecutar<T>(peticion: Observable<RespuestaApi<T>>): Promise<T> {

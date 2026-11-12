@@ -332,6 +332,19 @@ export class Care {
     }
   }
 
+  private unirEmociones(
+    primera: RegistroDiario['emociones'],
+    segunda: RegistroDiario['emociones']
+  ): RegistroDiario['emociones'] {
+    const resultado: RegistroDiario['emociones'] = [];
+    for (const emocion of [...primera, ...segunda]) {
+      if (!resultado.some(e => e.idEmocion === emocion.idEmocion)) {
+        resultado.push(emocion);
+      }
+    }
+    return resultado;
+  }
+
   async saveRecord(): Promise<void> {
     if (!this.canEditSelected) return;
 
@@ -352,9 +365,13 @@ export class Care {
         tipoFlujo: this.isPeriod ? intensidadABackend(this.flowIntensity) : null,
         nota: this.note.trim() || null,
         sintomas: traduccionSintomas.sintomas,
-        emociones: emociones.encontrados as RegistroDiario['emociones'],
+        emociones: this.unirEmociones(
+          emociones.encontrados as RegistroDiario['emociones'],
+          traduccionSintomas.emociones
+        ),
         actividadesSexuales: actividades.encontrados as RegistroDiario['actividadesSexuales'],
       };
+
 
       await this.api.guardarRegistro(this.sesion.idUsuario, registro, this.hasRecord);
       await this.cargarRegistros();

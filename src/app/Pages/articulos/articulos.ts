@@ -209,8 +209,7 @@ export class Articulos {
     this.savingEdit = true;
 
     try {
-      // ⚠ ajusta: se asume editarComentario(idArticulo, idComentario, idUsuario, contenido) en BloomApi.
-      await (this.api as any).editarComentario(articleId, comment.id, this.sesion.idUsuario, message);
+      await this.api.editarComentario(articleId, comment.id, this.sesion.idUsuario, message);
       this.cancelEdit();
       await this.cargarComentarios(articleId);
       this.commentMessage = {
@@ -243,8 +242,7 @@ export class Articulos {
     this.commentMessage = null;
 
     try {
-      // ⚠ ajusta: se asume eliminarComentario(idArticulo, idComentario, idUsuario) en BloomApi.
-      await (this.api as any).eliminarComentario(articleId, comment.id, this.sesion.idUsuario);
+      await this.api.eliminarComentario(articleId, comment.id, this.sesion.idUsuario);
       this.deletingCommentId = null;
       this.totales[articleId] = Math.max(0, (this.totales[articleId] ?? 1) - 1);
       await this.cargarComentarios(articleId);
@@ -315,8 +313,7 @@ export class Articulos {
   }
 
   private aComment(comentario: Comentario): ArticleComment {
-    // ⚠ ajusta: se asume que el comentario trae idUsuario para saber cuáles son de la usuaria.
-    const idUsuario = (comentario as any).idUsuario;
+    const idUsuario = comentario.idUsuario;
 
     return {
       id: comentario.idComentario,
