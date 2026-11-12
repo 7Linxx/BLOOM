@@ -88,10 +88,18 @@ export class Perfil {
     this.loadPrivacy();
   }
 
+  apodo(): string {
+    return (
+      this.original.apodo.trim() ||
+      this.sesion.usuaria()?.apodo?.trim() ||
+      this.original.primerNombre.trim() ||
+      this.sesion.usuaria()?.primerNombre?.trim() ||
+      ''
+    );
+  }
+
   get displayName(): string {
-    return this.profile.apodo.trim() ||
-      this.profile.primerNombre.trim() ||
-      'Tu perfil';
+    return this.apodo();
   }
 
   get fullName(): string {
@@ -110,7 +118,7 @@ export class Perfil {
       .split(/\s+/)
       .slice(0, 2)
       .map(part => part.charAt(0).toUpperCase())
-      .join('');
+      .join('') || '✿';
   }
 
   get age(): number | null {
